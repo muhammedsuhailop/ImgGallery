@@ -1,0 +1,41 @@
+{
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.7.0",
+    "nodemon": "^3.1.14",
+    "zod": "^4.4.3"
+  },
+  "name": "imggallary",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^25.9.3",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^6.0.3"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "clean": "rimraf dist",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/muhammedsuhailop/ImgGallary.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/muhammedsuhailop/ImgGallary/issues"
+  },
+  "homepage": "https://github.com/muhammedsuhailop/ImgGallary#readme"
+}
