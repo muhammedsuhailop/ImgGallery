@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import { env } from "../config/env";
 
-interface JwtPayload {
+export interface JwtPayload {
   userId: string;
 }
 
@@ -29,6 +29,34 @@ export const generateRefreshToken = (
   };
 };
 
+export const verifyAccessToken = (token: string): JwtPayload => {
+  const decoded = jwt.verify(token, env.JWT_SECRET);
+
+  if (
+    typeof decoded !== "object" ||
+    decoded === null ||
+    !("userId" in decoded)
+  ) {
+    throw new Error("Invalid access token payload");
+  }
+
+  return {
+    userId: String(decoded.userId),
+  };
+};
+
 export const verifyRefreshToken = (token: string): JwtPayload => {
-  return jwt.verify(token, env.JWT_REFRESH_SECRET) as JwtPayload;
+  const decoded = jwt.verify(token, env.JWT_REFRESH_SECRET);
+
+  if (
+    typeof decoded !== "object" ||
+    decoded === null ||
+    !("userId" in decoded)
+  ) {
+    throw new Error("Invalid refresh token payload");
+  }
+
+  return {
+    userId: String(decoded.userId),
+  };
 };

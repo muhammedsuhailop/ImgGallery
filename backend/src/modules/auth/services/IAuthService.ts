@@ -1,0 +1,15 @@
+import { LoginDto } from "../dto/LoginDto";
+import { RegisterDto } from "../dto/RegisterDto";
+import { LoginResponse } from "../responses/LoginResponse";
+import { RefreshTokenResponse } from "../responses/RefreshTokenResponse";
+import { RegisterResponse } from "../responses/RegisterResponse";
+
+export interface IAuthService {
+  register(data: RegisterDto): Promise<RegisterResponse>;
+
+  login(data: LoginDto): Promise<LoginResponse>;
+
+  refreshToken(refreshToken: string): Promise<RefreshTokenResponse>;
+
+  logout(refreshToken?: string): Promise<void>;
+}

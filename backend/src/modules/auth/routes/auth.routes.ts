@@ -1,10 +1,6 @@
 import { Router } from "express";
 import { authController } from "../../../container/auth.container";
-import {
-  registerSchema,
-  loginSchema,
-  refreshTokenSchema,
-} from "../validations/auth.validation";
+import { registerSchema, loginSchema } from "../validations/auth.validation";
 import { validateRequest } from "../../../middleware/validateRequest";
 import { asyncHandler } from "../../../middleware/asyncHandler";
 
@@ -22,16 +18,8 @@ router.post(
   asyncHandler(authController.login),
 );
 
-router.post(
-  "/refresh-token",
-  validateRequest(refreshTokenSchema),
-  asyncHandler(authController.refreshToken),
-);
+router.post("/refresh-token", asyncHandler(authController.refreshToken));
 
-router.post(
-  "/logout",
-  validateRequest(refreshTokenSchema),
-  asyncHandler(authController.logout),
-);
+router.post("/logout", asyncHandler(authController.logout));
 
 export default router;

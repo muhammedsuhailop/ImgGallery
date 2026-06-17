@@ -10,15 +10,19 @@ import { RegisterDto } from "../dto/RegisterDto";
 import { LoginDto } from "../dto/LoginDto";
 import { IUserRepository } from "../repositories/IUserRepository";
 import { IRefreshTokenRepository } from "../repositories/IRefreshTokenRepository";
+import { RegisterResponse } from "../responses/RegisterResponse";
+import { RefreshTokenResponse } from "../responses/RefreshTokenResponse";
+import { LoginResponse } from "../responses/LoginResponse";
+import { IAuthService } from "./IAuthService";
 
-export class AuthService {
+export class AuthService implements IAuthService {
   constructor(
     private readonly userRepository: IUserRepository,
 
     private readonly refreshTokenRepository: IRefreshTokenRepository,
   ) {}
 
-  async register(data: RegisterDto) {
+  async register(data: RegisterDto): Promise<RegisterResponse> {
     const existingEmail = await this.userRepository.findByEmail(data.email);
 
     if (existingEmail) {
@@ -41,13 +45,15 @@ export class AuthService {
     });
 
     return {
-      id: user.id,
-      email: user.email,
-      phoneNumber: user.phoneNumber,
+      user: {
+        id: user.id,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+      },
     };
   }
 
-  async login(data: LoginDto) {
+  async login(data: LoginDto): Promise<LoginResponse> {
     const user = await this.userRepository.findByEmail(data.email);
 
     if (!user) {
@@ -76,7 +82,7 @@ export class AuthService {
     };
   }
 
-  async refreshToken(refreshToken: string) {
+  async refreshToken(refreshToken: string): Promise<RefreshTokenResponse> {
     const payload = verifyRefreshToken(refreshToken);
 
     const storedToken = await this.refreshTokenRepository.findByToken(
@@ -87,14 +93,29 @@ export class AuthService {
       throw new ApiError(401, "Invalid refresh token");
     }
 
+    await this.refreshTokenRepository.deleteByToken(hashToken(refreshToken));
+
     const accessToken = generateAccessToken(payload.userId);
+
+    const newRefresh = generateRefreshToken(payload.userId);
+
+    await this.refreshTokenRepository.create(
+      payload.userId,
+      hashToken(newRefresh.token),
+      newRefresh.expiresAt,
+    );
 
     return {
       accessToken,
+      refreshToken: newRefresh.token,
     };
   }
 
-  async logout(refreshToken: string): Promise<void> {
+  async logout(refreshToken?: string): Promise<void> {
+    if (!refreshToken) {
+      return;
+    }
+
     await this.refreshTokenRepository.deleteByToken(hashToken(refreshToken));
   }
 }

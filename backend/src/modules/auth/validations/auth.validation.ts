@@ -3,7 +3,7 @@ import { z } from "zod";
 export const registerSchema = z.object({
   email: z
     .string()
-    .min(1, { message: "Email is required" }) 
+    .min(1, { message: "Email is required" })
     .trim()
     .email({ message: "Invalid email format" }),
 
@@ -27,8 +27,4 @@ export const loginSchema = z.object({
     .email({ message: "Invalid email format" }),
 
   password: z.string().min(1, { message: "Password is required" }),
-});
-
-export const refreshTokenSchema = z.object({
-  refreshToken: z.string().min(1),
 });

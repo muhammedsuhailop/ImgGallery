@@ -1,9 +1,10 @@
 import { Request, Response } from "express";
-import { AuthService } from "../services/AuthService";
 import { ApiResponse } from "../../../utils/ApiResponse";
+import { IAuthService } from "../services/IAuthService";
+import { setAuthCookies } from "../../../utils/cookies";
 
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: IAuthService) {}
 
   register = async (req: Request, res: Response): Promise<void> => {
     const result = await this.authService.register(req.body);
@@ -16,17 +17,23 @@ export class AuthController {
   login = async (req: Request, res: Response): Promise<void> => {
     const result = await this.authService.login(req.body);
 
-    res.status(200).json(new ApiResponse(true, "Login successful", result));
+    setAuthCookies(res, result.accessToken, result.refreshToken);
+
+    res.status(200).json(new ApiResponse(true, "Login successful"));
   };
 
   refreshToken = async (req: Request, res: Response): Promise<void> => {
-    const result = await this.authService.refreshToken(req.body.refreshToken);
+    const result = await this.authService.refreshToken(
+      req.cookies.refreshToken,
+    );
 
-    res.status(200).json(new ApiResponse(true, "Token refreshed", result));
+    setAuthCookies(res, result.accessToken, result.refreshToken);
+
+    res.status(200).json(new ApiResponse(true, "Token refreshed"));
   };
 
   logout = async (req: Request, res: Response): Promise<void> => {
-    await this.authService.logout(req.body.refreshToken);
+    await this.authService.logout(req.cookies.refreshToken);
 
     res.status(200).json(new ApiResponse(true, "Logout successful"));
   };
