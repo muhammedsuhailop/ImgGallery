@@ -1,12 +1,9 @@
-import { User } from "../../../domain/entities/User";
-
-import { UserModel } from "../../../models/UserModel";
-
-import { RegisterDto } from "../dto/RegisterDto";
-
-import { IUserRepository } from "./IUserRepository";
-
+import { User } from "../../domain/entities/User";
+import { UserModel } from "../models/UserModel";
+import { RegisterDto } from "../../modules/auth/dto/RegisterDto";
+import { IUserRepository } from "../interfaces/IUserRepository";
 import { toUserEntity } from "./mappers/user.mapper";
+
 
 export class UserRepository implements IUserRepository {
   async findById(id: string): Promise<User | null> {

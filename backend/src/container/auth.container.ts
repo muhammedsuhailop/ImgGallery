@@ -1,8 +1,8 @@
-import { UserRepository } from "../modules/auth/repositories/UserRepository";
-import { RefreshTokenRepository } from "../modules/auth/repositories/RefreshTokenRepository";
+import { RefreshTokenRepository } from "../repositories/implementations/RefreshTokenRepository";
 import { AuthService } from "../modules/auth/services/AuthService";
 import { AuthController } from "../modules/auth/controllers/AuthController";
 import { IAuthService } from "../modules/auth/services/IAuthService";
+import { UserRepository } from "../repositories/implementations/UserRepository";
 
 const userRepository = new UserRepository();
 

@@ -1,6 +1,5 @@
-import { User } from "../../../domain/entities/User";
-
-import { RegisterDto } from "../dto/RegisterDto";
+import { User } from "../../domain/entities/User";
+import { RegisterDto } from "../../modules/auth/dto/RegisterDto";
 
 export interface IUserRepository {
   findById(id: string): Promise<User | null>;

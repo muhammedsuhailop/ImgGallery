@@ -1,11 +1,7 @@
 import { Types } from "mongoose";
-
-import { RefreshToken } from "../../../domain/entities/RefreshToken";
-
-import { RefreshTokenModel } from "../../../models/RefreshTokenModel";
-
-import { IRefreshTokenRepository } from "./IRefreshTokenRepository";
-
+import { RefreshToken } from "../../domain/entities/RefreshToken";
+import { RefreshTokenModel } from "../models/RefreshTokenModel";
+import { IRefreshTokenRepository } from "../interfaces/IRefreshTokenRepository";
 import { toRefreshTokenEntity } from "./mappers/refreshToken.mapper";
 
 export class RefreshTokenRepository implements IRefreshTokenRepository {
