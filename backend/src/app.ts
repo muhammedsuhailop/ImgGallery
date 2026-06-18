@@ -3,6 +3,7 @@ import authRoutes from "./modules/auth/routes/auth.routes";
 import { errorHandler } from "./middleware/errorHandler";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import imageRoutes from "./modules/image/routes/image.routes";
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use(
 );
 
 app.use("/api/auth", authRoutes);
+app.use("/api/images", imageRoutes);
 
 app.use(errorHandler);
 
