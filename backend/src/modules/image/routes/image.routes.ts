@@ -7,6 +7,8 @@ import {
   uploadBatchSchema,
   updateImageItemSchema,
   rearrangeImagesSchema,
+  rearrangeBatchesSchema,
+  updateBatchSchema,
 } from "../validations/image.validation";
 import { imageController } from "../../../container/image.container";
 
@@ -17,13 +19,27 @@ router.use(authenticate as unknown as RequestHandler);
 // POST   /api/images
 router.post(
   "/",
-  upload.array("images", 5),
+  upload.array("images", 20),
   validateRequest(uploadBatchSchema),
   asyncHandler(imageController.uploadBatch),
 );
 
 // GET    /api/images
 router.get("/", asyncHandler(imageController.getMyBatches));
+
+// PATCH  /api/images/:batchId          
+router.patch(
+  "/:batchId",
+  validateRequest(updateBatchSchema),
+  asyncHandler(imageController.updateBatch),
+);
+
+// PUT    /api/images/rearrange
+router.put(
+  "/rearrange",
+  validateRequest(rearrangeBatchesSchema),
+  asyncHandler(imageController.rearrangeBatches),
+);
 
 // GET    /api/images/:batchId
 router.get("/:batchId", asyncHandler(imageController.getBatch));

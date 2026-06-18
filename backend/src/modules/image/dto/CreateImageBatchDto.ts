@@ -6,6 +6,7 @@ export interface UploadedImageMeta {
 
 export interface CreateImageBatchDto {
   userId: string;
+  title: string;
   images: UploadedImageMeta[];
   visibility: "public" | "private";
 }

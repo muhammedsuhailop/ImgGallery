@@ -2,7 +2,10 @@ import { Request, Response } from "express";
 import { ApiResponse } from "../../../utils/ApiResponse";
 import { IImageService } from "../services/IImageService";
 import { AuthRequest } from "../../../middleware/auth.middleware";
-import { RearrangeImagesDto } from "../dto/RearrangeImagesDto";
+import {
+  RearrangeImagesDto,
+  RearrangeBatchesDto,
+} from "../dto/RearrangeImagesDto";
 
 export class ImageController {
   constructor(private readonly imageService: IImageService) {}
@@ -17,6 +20,8 @@ export class ImageController {
       ? (rawTitles as string[])
       : [rawTitles as string];
 
+    const batchTitle: string = req.body.title;
+
     const visibility: "public" | "private" =
       req.body.visibility === "public" ? "public" : "private";
 
@@ -24,6 +29,7 @@ export class ImageController {
       authReq.userId,
       files,
       titles,
+      batchTitle,
       visibility,
     );
 
@@ -49,6 +55,18 @@ export class ImageController {
     );
 
     res.status(200).json(new ApiResponse(true, "Batch retrieved", result));
+  };
+
+  updateBatch = async (req: Request, res: Response): Promise<void> => {
+    const authReq = req as AuthRequest;
+
+    const result = await this.imageService.updateBatch(
+      req.params.batchId as string,
+      authReq.userId,
+      req.body,
+    );
+
+    res.status(200).json(new ApiResponse(true, "Batch updated", result));
   };
 
   updateImageItem = async (req: Request, res: Response): Promise<void> => {
@@ -79,6 +97,19 @@ export class ImageController {
     );
 
     res.status(200).json(new ApiResponse(true, "Images rearranged", result));
+  };
+
+  rearrangeBatches = async (req: Request, res: Response): Promise<void> => {
+    const authReq = req as AuthRequest;
+
+    const data = req.body as RearrangeBatchesDto;
+
+    const result = await this.imageService.rearrangeBatches(
+      authReq.userId,
+      data,
+    );
+
+    res.status(200).json(new ApiResponse(true, "Batches rearranged", result));
   };
 
   deleteImageItem = async (req: Request, res: Response): Promise<void> => {

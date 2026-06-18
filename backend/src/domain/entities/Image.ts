@@ -10,6 +10,8 @@ export interface ImageBatch {
   id: string;
   userId: string;
   images: ImageItem[];
+  title: string;
+  order: number;
   visibility: "public" | "private";
   createdAt: Date;
   updatedAt: Date;

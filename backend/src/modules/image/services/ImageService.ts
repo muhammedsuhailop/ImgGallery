@@ -7,9 +7,16 @@ import {
   ImageBatchResponse,
   ImageItemResponse,
 } from "../responses/ImageBatchResponse";
-import { ImageBatchListResponse } from "../responses/ImageBatchListResponse";
+import {
+  ImageBatchListResponse,
+  RearrangeBatchesResponse,
+} from "../responses/ImageBatchListResponse";
 import { UpdateImageItemDto } from "../dto/UpdateImageItemDto";
-import { RearrangeImagesDto } from "../dto/RearrangeImagesDto";
+import {
+  RearrangeImagesDto,
+  RearrangeBatchesDto,
+} from "../dto/RearrangeImagesDto";
+import { UpdateImageBatchDto } from "../dto/UpdateImageBatchDto";
 
 export class ImageService implements IImageService {
   constructor(
@@ -27,6 +34,8 @@ export class ImageService implements IImageService {
 
     return {
       batchId: batch.id,
+      title: batch.title,
+      order: batch.order,
       visibility: batch.visibility,
       images,
       createdAt: batch.createdAt,
@@ -38,6 +47,7 @@ export class ImageService implements IImageService {
     userId: string,
     files: Express.Multer.File[],
     titles: string[],
+    batchTitle: string,
     visibility: "public" | "private",
   ): Promise<ImageBatchResponse> {
     if (!files.length) {
@@ -60,6 +70,7 @@ export class ImageService implements IImageService {
 
     const batch = await this.imageRepository.create({
       userId,
+      title: batchTitle,
       images,
       visibility,
     });
@@ -90,6 +101,33 @@ export class ImageService implements IImageService {
     }
 
     return this.toResponse(batch);
+  }
+
+  async updateBatch(
+    batchId: string,
+    userId: string,
+    data: UpdateImageBatchDto,
+  ): Promise<ImageBatchResponse> {
+    const existing = await this.imageRepository.findByIdAndUser(
+      batchId,
+      userId,
+    );
+
+    if (!existing) {
+      throw new ApiError(404, "Batch not found or access denied");
+    }
+
+    const updated = await this.imageRepository.updateBatch(
+      batchId,
+      userId,
+      data,
+    );
+
+    if (!updated) {
+      throw new ApiError(500, "Failed to update batch");
+    }
+
+    return this.toResponse(updated);
   }
 
   async updateImageItem(
@@ -159,6 +197,18 @@ export class ImageService implements IImageService {
     }
 
     return this.toResponse(updated);
+  }
+
+  async rearrangeBatches(
+    userId: string,
+    data: RearrangeBatchesDto,
+  ): Promise<RearrangeBatchesResponse> {
+    const updatedBatches = await this.imageRepository.rearrangeBatches(
+      userId,
+      data,
+    );
+
+    return { batches: updatedBatches.map((batch) => this.toResponse(batch)) };
   }
 
   async deleteImageItem(

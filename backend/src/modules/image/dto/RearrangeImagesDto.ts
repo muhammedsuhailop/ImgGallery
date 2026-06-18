@@ -6,3 +6,12 @@ export interface RearrangeEntry {
 export interface RearrangeImagesDto {
   orderedImages: RearrangeEntry[];
 }
+
+export interface RearrangeBatchEntry {
+  batchId: string;
+  order: number;
+}
+
+export interface RearrangeBatchesDto {
+  orderedBatches: RearrangeBatchEntry[];
+}

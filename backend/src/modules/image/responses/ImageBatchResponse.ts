@@ -7,6 +7,8 @@ export interface ImageItemResponse {
 
 export interface ImageBatchResponse {
   batchId: string;
+  title: string; 
+  order: number;
   visibility: "public" | "private";
   images: ImageItemResponse[];
   createdAt: Date;

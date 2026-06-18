@@ -11,6 +11,8 @@ export interface ImageItemPersistence {
 export interface ImageBatchPersistence {
   userId: Types.ObjectId | string;
   images: ImageItemPersistence[];
+  title: string;
+  order: number;
   visibility: "public" | "private";
   createdAt: Date;
   updatedAt: Date;
@@ -36,6 +38,8 @@ const imageBatchSchema = new Schema<ImageBatchPersistence>(
       required: true,
       index: true,
     },
+    title: { type: String, required: true, trim: true },
+    order: { type: Number, required: true, default: 0 },
     images: { type: [imageItemSchema], default: [] },
     visibility: {
       type: String,

@@ -1,6 +1,10 @@
 import { ImageBatch } from "../../domain/entities/Image";
 import { CreateImageBatchDto } from "../../modules/image/dto/CreateImageBatchDto";
-import { RearrangeImagesDto } from "../../modules/image/dto/RearrangeImagesDto";
+import {
+  RearrangeBatchesDto,
+  RearrangeImagesDto,
+} from "../../modules/image/dto/RearrangeImagesDto";
+import { UpdateImageBatchDto } from "../../modules/image/dto/UpdateImageBatchDto";
 import { UpdateImageItemDto } from "../../modules/image/dto/UpdateImageItemDto";
 export interface IImageRepository {
   create(data: CreateImageBatchDto): Promise<ImageBatch>;
@@ -10,6 +14,12 @@ export interface IImageRepository {
   findById(batchId: string): Promise<ImageBatch | null>;
 
   findByIdAndUser(batchId: string, userId: string): Promise<ImageBatch | null>;
+
+  updateBatch(
+    batchId: string,
+    userId: string,
+    data: UpdateImageBatchDto,
+  ): Promise<ImageBatch | null>;
 
   updateImageItem(
     batchId: string,
@@ -21,6 +31,11 @@ export interface IImageRepository {
     batchId: string,
     data: RearrangeImagesDto,
   ): Promise<ImageBatch | null>;
+
+  rearrangeBatches(
+    userId: string,
+    data: RearrangeBatchesDto,
+  ): Promise<ImageBatch[]>;
 
   deleteImageItem(
     batchId: string,
