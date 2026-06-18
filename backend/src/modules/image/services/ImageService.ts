@@ -2,7 +2,11 @@ import { IImageService } from "./IImageService";
 import { IImageRepository } from "../../../repositories/interfaces/IImageRepository";
 import { IStorageService } from "./IStorageService";
 import { ApiError } from "../../../utils/ApiError";
-import { ImageBatchResponse } from "../responses/ImageBatchResponse";
+import { ImageBatch } from "../../../domain/entities/Image";
+import {
+  ImageBatchResponse,
+  ImageItemResponse,
+} from "../responses/ImageBatchResponse";
 import { ImageBatchListResponse } from "../responses/ImageBatchListResponse";
 import { UpdateImageItemDto } from "../dto/UpdateImageItemDto";
 import { RearrangeImagesDto } from "../dto/RearrangeImagesDto";
@@ -12,6 +16,23 @@ export class ImageService implements IImageService {
     private readonly imageRepository: IImageRepository,
     private readonly storageService: IStorageService,
   ) {}
+
+  private toResponse(batch: ImageBatch): ImageBatchResponse {
+    const images: ImageItemResponse[] = batch.images.map((img) => ({
+      imageId: img.id,
+      url: img.url,
+      title: img.title,
+      order: img.order,
+    }));
+
+    return {
+      batchId: batch.id,
+      visibility: batch.visibility,
+      images,
+      createdAt: batch.createdAt,
+      updatedAt: batch.updatedAt,
+    };
+  }
 
   async uploadBatch(
     userId: string,
@@ -43,13 +64,13 @@ export class ImageService implements IImageService {
       visibility,
     });
 
-    return { batch };
+    return this.toResponse(batch);
   }
 
   async getMyBatches(userId: string): Promise<ImageBatchListResponse> {
     const batches = await this.imageRepository.findAllByUser(userId);
 
-    return { batches };
+    return { batches: batches.map((batch) => this.toResponse(batch)) };
   }
 
   async getBatch(
@@ -68,7 +89,7 @@ export class ImageService implements IImageService {
       throw new ApiError(403, "Access denied");
     }
 
-    return { batch };
+    return this.toResponse(batch);
   }
 
   async updateImageItem(
@@ -114,7 +135,7 @@ export class ImageService implements IImageService {
       throw new ApiError(500, "Failed to update image");
     }
 
-    return { batch: updated };
+    return this.toResponse(updated);
   }
 
   async rearrangeImages(
@@ -137,7 +158,7 @@ export class ImageService implements IImageService {
       throw new ApiError(500, "Failed to rearrange images");
     }
 
-    return { batch: updated };
+    return this.toResponse(updated);
   }
 
   async deleteImageItem(
@@ -172,7 +193,7 @@ export class ImageService implements IImageService {
       throw new ApiError(500, "Failed to delete image");
     }
 
-    return { batch: updated };
+    return this.toResponse(updated);
   }
 
   async deleteBatch(batchId: string, userId: string): Promise<void> {

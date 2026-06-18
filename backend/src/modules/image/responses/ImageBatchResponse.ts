@@ -1,5 +1,14 @@
-import { ImageBatch } from "../../../domain/entities/Image";
+export interface ImageItemResponse {
+  imageId: string;
+  url: string;
+  title: string;
+  order: number;
+}
 
 export interface ImageBatchResponse {
-  batch: ImageBatch;
+  batchId: string;
+  visibility: "public" | "private";
+  images: ImageItemResponse[];
+  createdAt: Date;
+  updatedAt: Date;
 }

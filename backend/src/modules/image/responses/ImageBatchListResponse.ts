@@ -1,5 +1,5 @@
-import { ImageBatch } from "../../../domain/entities/Image";
+import { ImageBatchResponse } from "./ImageBatchResponse";
 
 export interface ImageBatchListResponse {
-  batches: ImageBatch[];
+  batches: ImageBatchResponse[];
 }
