@@ -14,6 +14,7 @@ import { RegisterResponse } from "../responses/RegisterResponse";
 import { RefreshTokenResponse } from "../responses/RefreshTokenResponse";
 import { LoginResponse } from "../responses/LoginResponse";
 import { IAuthService } from "./IAuthService";
+import { MeResponse } from "../responses/MeResponse";
 
 export class AuthService implements IAuthService {
   constructor(
@@ -47,6 +48,7 @@ export class AuthService implements IAuthService {
     return {
       user: {
         id: user.id,
+        name: user.name,
         email: user.email,
         phoneNumber: user.phoneNumber,
       },
@@ -117,5 +119,22 @@ export class AuthService implements IAuthService {
     }
 
     await this.refreshTokenRepository.deleteByToken(hashToken(refreshToken));
+  }
+
+  async getMe(userId: string): Promise<MeResponse> {
+    const user = await this.userRepository.findById(userId);
+
+    if (!user) {
+      throw new ApiError(404, "User not found");
+    }
+
+    return {
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+      },
+    };
   }
 }

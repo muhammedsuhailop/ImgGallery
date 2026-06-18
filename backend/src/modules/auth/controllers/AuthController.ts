@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { ApiResponse } from "../../../utils/ApiResponse";
 import { IAuthService } from "../services/IAuthService";
 import { setAuthCookies } from "../../../utils/cookies";
+import { AuthRequest } from "../../../middleware/auth.middleware";
 
 export class AuthController {
   constructor(private readonly authService: IAuthService) {}
@@ -36,5 +37,13 @@ export class AuthController {
     await this.authService.logout(req.cookies.refreshToken);
 
     res.status(200).json(new ApiResponse(true, "Logout successful"));
+  };
+
+  getMe = async (req: Request, res: Response): Promise<void> => {
+    const authReq = req as AuthRequest;
+
+    const result = await this.authService.getMe(authReq.userId);
+
+    res.status(200).json(new ApiResponse(true, "User data fetched", result));
   };
 }
