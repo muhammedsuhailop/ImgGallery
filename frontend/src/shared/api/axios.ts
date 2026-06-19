@@ -21,39 +21,50 @@ export const api: AxiosInstance = axios.create({
   },
 });
 
-api.interceptors.request.use((config) => config);
+api.interceptors.request.use((config) => {
+  console.log(
+    `[API Request] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`,
+  );
 
-let refreshPromise: Promise<void> | null = null;
+  return config;
+});
+
+let refreshPromise: Promise<AxiosResponse<unknown>> | null = null;
 
 async function refreshSession(): Promise<void> {
   if (!refreshPromise) {
-    refreshPromise = axios
-      .post(
-        `${env.apiUrl}/auth/refresh-token`,
-        {},
-        {
-          withCredentials: true,
-        },
-      )
-      .then(() => undefined)
-      .finally(() => {
-        refreshPromise = null;
-      });
+    refreshPromise = axios.post<unknown>(
+      `${env.apiUrl}/auth/refresh-token`,
+      {},
+      {
+        withCredentials: true,
+      },
+    );
+  } else {
+    console.log("[Auth] Waiting for existing refresh request");
   }
 
-  await refreshPromise;
+  try {
+    const response = await refreshPromise;
+  } catch (error) {
+    console.error("[Auth] Refresh failed", error);
+
+    throw error;
+  } finally {
+    refreshPromise = null;
+  }
 }
 
 const AUTH_ENDPOINTS = [
   "/auth/login",
   "/auth/register",
   "/auth/logout",
-  "/auth/me",
   "/auth/refresh-token",
 ];
 
 api.interceptors.response.use(
   (response: AxiosResponse) => response,
+
   async (error: AxiosError<ApiErrorResponse>) => {
     const originalRequest = error.config as RetriableRequestConfig | undefined;
 
@@ -63,20 +74,21 @@ api.interceptors.response.use(
       requestUrl.includes(endpoint),
     );
 
-    if (
+    const shouldRefresh =
       error.response?.status === 401 &&
-      originalRequest &&
-      !originalRequest._retry &&
-      !originalRequest._skipAuthRefresh &&
-      !isAuthRequest
-    ) {
+      Boolean(originalRequest) &&
+      !originalRequest?._retry &&
+      !originalRequest?._skipAuthRefresh &&
+      !isAuthRequest;
+
+    if (shouldRefresh && originalRequest) {
       originalRequest._retry = true;
 
       try {
         await refreshSession();
 
         return api(originalRequest);
-      } catch {
+      } catch (refreshError) {
         if (typeof window !== "undefined") {
           const currentPath = window.location.pathname;
 
@@ -85,7 +97,7 @@ api.interceptors.response.use(
           }
         }
 
-        return Promise.reject(error);
+        return Promise.reject(refreshError);
       }
     }
 

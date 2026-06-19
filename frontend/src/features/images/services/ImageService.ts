@@ -32,10 +32,10 @@ class ImageService {
     formData.append("title", data.title);
     formData.append("visibility", data.visibility);
     data.files.forEach((file) => {
-      formData.append("images[]", file);
+      formData.append("images", file);
     });
     data.titles.forEach((title) => {
-      formData.append("titles[]", title);
+      formData.append("titles", title);
     });
 
     const response = await api.post<ApiResponse<AlbumPayload | Album>>(

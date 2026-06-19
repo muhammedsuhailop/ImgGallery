@@ -15,7 +15,7 @@ export const setAuthCookies = (
     httpOnly: true,
     secure: isProduction,
     sameSite: "strict",
-    maxAge: 15 * 60 * 1000,
+    maxAge: 10 * 60 * 1000,
   });
 
   res.cookie(REFRESH_TOKEN_COOKIE, refreshToken, {
