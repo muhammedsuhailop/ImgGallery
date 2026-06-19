@@ -1,4 +1,4 @@
-import { memo, useMemo, type JSX } from "react";
+import { memo, useMemo, useState, type JSX } from "react";
 import {
   DndContext,
   closestCenter,
@@ -17,6 +17,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { ImageCard } from "./ImageCard";
 import type { Image } from "@/features/images/types/image.types";
+import { ImageModal } from "./ImageModal";
 
 export interface ImageGridProps {
   images: Image[];
@@ -25,12 +26,12 @@ export interface ImageGridProps {
   onUpdateTitle: (imageId: string, title: string) => void | Promise<void>;
   onReplaceFile: (imageId: string, file: File) => void | Promise<void>;
   onDelete: (imageId: string) => void | Promise<void>;
-  onReorder: (activeId: string, overId: string) => void; 
+  onReorder: (activeId: string, overId: string) => void;
 }
 
-// Wrapper to make ImageCard sortable without mutating its source code
 function SortableImageWrapper({
   image,
+  onView,
   ...props
 }: { image: Image } & Omit<
   React.ComponentProps<typeof ImageCard>,
@@ -48,13 +49,13 @@ function SortableImageWrapper({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.4 : 1,
     zIndex: isDragging ? 10 : 1,
   };
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <ImageCard image={image} {...props} />
+      <ImageCard image={image} onView={onView} {...props} />
     </div>
   );
 }
@@ -68,7 +69,6 @@ function ImageGridComponent({
   onDelete,
   onReorder,
 }: ImageGridProps): JSX.Element {
-  // Sensors require movement before dragging starts so button clicks still work
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, {
@@ -76,11 +76,13 @@ function ImageGridComponent({
     }),
   );
 
+  const [selectedImage, setSelectedImage] = useState<Image | null>(null);
+
   const imageIds = useMemo(() => images.map((img) => img.imageId), [images]);
 
   if (images.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-border bg-card/50 p-10 text-center text-sm text-muted-foreground">
+      <div className="py-16 text-center text-sm text-muted-foreground">
         This album has no images yet.
       </div>
     );
@@ -102,27 +104,37 @@ function ImageGridComponent({
   }
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
-    >
-      <SortableContext items={imageIds} strategy={rectSortingStrategy}>
-        <div className={`grid gap-4 ${gridColsClass}`}>
-          {images.map((image) => (
-            <SortableImageWrapper
-              key={image.imageId}
-              image={image}
-              isUpdating={isUpdating}
-              isDeleting={isDeleting}
-              onUpdateTitle={onUpdateTitle}
-              onReplaceFile={onReplaceFile}
-              onDelete={onDelete}
-            />
-          ))}
-        </div>
-      </SortableContext>
-    </DndContext>
+    <>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext items={imageIds} strategy={rectSortingStrategy}>
+          <div className={`grid gap-6 ${gridColsClass}`}>
+            {images.map((image) => (
+              <SortableImageWrapper
+                key={image.imageId}
+                image={image}
+                isUpdating={isUpdating}
+                isDeleting={isDeleting}
+                onUpdateTitle={onUpdateTitle}
+                onReplaceFile={onReplaceFile}
+                onDelete={onDelete}
+                onView={setSelectedImage}
+              />
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
+      {selectedImage && (
+        <ImageModal
+          imageUrl={selectedImage.url}
+          title={selectedImage.title}
+          onClose={() => setSelectedImage(null)}
+        />
+      )}
+    </>
   );
 }
 

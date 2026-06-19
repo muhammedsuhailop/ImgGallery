@@ -24,46 +24,48 @@ export function AlbumHeader({
   onDeleteAlbum,
 }: AlbumHeaderProps): JSX.Element {
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 shadow-sm sm:p-6">
+    <div className="mb-6 flex flex-col gap-4 border-b border-border pb-6 pt-2">
       <button
         type="button"
         onClick={onBack}
-        className="inline-flex w-fit items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
+        className="inline-flex w-fit items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to albums
       </button>
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex-1">
           <AlbumTitleEditor
             title={album.title}
             isSaving={isSavingTitle}
             onSave={onSaveTitle}
           />
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-2 text-sm text-muted-foreground">
             {album.images.length}{" "}
             {album.images.length === 1 ? "Image" : "Images"} ·{" "}
             <span className="capitalize">{album.visibility}</span>
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2">
           <Button
             size="md"
-            leftIcon={<Plus className="h-4 w-4" />}
+            title="Add Images"
             onClick={onAddImages}
+            className="px-3"
           >
-            Add Images
+            <Plus className="h-5 w-5" />
           </Button>
           <Button
             size="md"
             variant="danger"
-            leftIcon={<Trash2 className="h-4 w-4" />}
+            title="Delete Album"
             onClick={onDeleteAlbum}
             isLoading={isDeleting}
+            className="px-3"
           >
-            Delete Album
+            <Trash2 className="h-5 w-5" />
           </Button>
         </div>
       </div>
