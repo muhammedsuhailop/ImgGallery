@@ -9,6 +9,7 @@ import type {
   Album,
   CreateAlbumInput,
   DeleteImageInput,
+  RearrangeImagesInput,
   UpdateAlbumTitleInput,
   UpdateImageInput,
 } from "@/features/images/types/image.types";
@@ -126,6 +127,24 @@ export const addImagesToAlbumThunk = createAsyncThunk<
     const response = await imageService.addImagesToAlbum(payload);
     const album = extractAlbum(response.data);
     if (album) return album;
+    const fresh = await dispatch(fetchAlbumThunk(payload.batchId));
+    if (fetchAlbumThunk.fulfilled.match(fresh)) return fresh.payload;
+    return null;
+  } catch (error) {
+    return rejectWithValue(getErrorMessage(error));
+  }
+});
+
+export const rearrangeImagesThunk = createAsyncThunk<
+  Album | null,
+  RearrangeImagesInput,
+  ImageThunkApiConfig
+>("images/rearrangeImages", async (payload, { rejectWithValue, dispatch }) => {
+  try {
+    const response = await imageService.rearrangeImages(payload);
+    const album = extractAlbum(response.data);
+    if (album) return album;
+
     const fresh = await dispatch(fetchAlbumThunk(payload.batchId));
     if (fetchAlbumThunk.fulfilled.match(fresh)) return fresh.payload;
     return null;

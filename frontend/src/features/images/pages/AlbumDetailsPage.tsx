@@ -21,6 +21,8 @@ import {
   type UploadImagesSubmitData,
 } from "@/features/images/components/UploadImagesModal";
 import { PageLoader } from "@/shared/components/feedback/PageLoader";
+import { arrayMove } from "@dnd-kit/sortable";
+import { rearrangeImagesThunk } from "@/features/images/store/imageThunks";
 
 export function AlbumDetailsPage(): JSX.Element {
   const { batchId } = useParams<{ batchId: string }>();
@@ -37,6 +39,7 @@ export function AlbumDetailsPage(): JSX.Element {
     error,
   } = useImages();
   const [addOpen, setAddOpen] = useState(false);
+  const [localImages, setLocalImages] = useState(currentAlbum?.images ?? []);
 
   useEffect(() => {
     if (batchId) {
@@ -47,6 +50,12 @@ export function AlbumDetailsPage(): JSX.Element {
       dispatch(clearImagesError());
     };
   }, [batchId, dispatch]);
+
+  useEffect(() => {
+    if (currentAlbum) {
+      setLocalImages(currentAlbum.images);
+    }
+  }, [currentAlbum]);
 
   const handleBack = useCallback((): void => {
     navigate("/images");
@@ -110,6 +119,28 @@ export function AlbumDetailsPage(): JSX.Element {
     [batchId, dispatch],
   );
 
+  const handleReorder = useCallback(
+    async (activeId: string, overId: string): Promise<void> => {
+      if (!batchId) return;
+
+      const oldIndex = localImages.findIndex((img) => img.imageId === activeId);
+      const newIndex = localImages.findIndex((img) => img.imageId === overId);
+
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const newArray = arrayMove(localImages, oldIndex, newIndex);
+        setLocalImages(newArray);
+
+        const orderedImages = newArray.map((img, index) => ({
+          imageId: img.imageId,
+          order: index,
+        }));
+
+        await dispatch(rearrangeImagesThunk({ batchId, orderedImages }));
+      }
+    },
+    [batchId, localImages, dispatch],
+  );
+
   if (isLoadingAlbum && !currentAlbum) {
     return <PageLoader />;
   }
@@ -155,6 +186,7 @@ export function AlbumDetailsPage(): JSX.Element {
           onUpdateTitle={handleUpdateTitle}
           onReplaceFile={handleReplaceFile}
           onDelete={handleDeleteImage}
+          onReorder={handleReorder}
         />
       </section>
 

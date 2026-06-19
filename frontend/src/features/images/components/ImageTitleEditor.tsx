@@ -38,6 +38,18 @@ export function ImageTitleEditor({
       <Input
         value={value}
         onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => {
+          e.stopPropagation();
+
+          if (e.key === "Enter") {
+            void handleSave();
+          } else if (e.key === "Escape") {
+            onCancel();
+          }
+        }}
+        onPointerDown={(e) => {
+          e.stopPropagation();
+        }}
         hasError={Boolean(error)}
         maxLength={100}
         autoFocus

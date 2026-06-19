@@ -7,6 +7,7 @@ import type {
   AlbumsPayload,
   CreateAlbumInput,
   DeleteImageInput,
+  RearrangeImagesInput,
   UpdateAlbumTitleInput,
   UpdateImageInput,
 } from "@/features/images/types/image.types";
@@ -110,6 +111,16 @@ class ImageService {
       `/images/${input.batchId}/images`,
       formData,
       { headers: { "Content-Type": "multipart/form-data" } },
+    );
+    return response.data;
+  }
+
+  async rearrangeImages(
+    input: RearrangeImagesInput,
+  ): Promise<ApiResponse<AlbumPayload | Album>> {
+    const response = await api.put<ApiResponse<AlbumPayload | Album>>(
+      `/images/${input.batchId}/rearrange`,
+      { orderedImages: input.orderedImages },
     );
     return response.data;
   }

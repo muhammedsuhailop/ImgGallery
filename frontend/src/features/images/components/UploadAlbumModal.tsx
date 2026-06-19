@@ -7,7 +7,25 @@ import {
   type FormEvent,
   type JSX,
 } from "react";
-import { X } from "lucide-react";
+import { X, GripVertical } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
 import { Button } from "@/shared/components/ui/Button";
 import { Input } from "@/shared/components/ui/Input";
 import { FormField } from "@/shared/components/ui/FormField";
@@ -36,6 +54,83 @@ function makeId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+interface SortableImageEntryProps {
+  entry: ImageEntry;
+  titleErr?: string;
+  onTitleChange: (id: string, value: string) => void;
+  onRemove: (id: string) => void;
+}
+
+function SortableImageEntryItem({
+  entry,
+  titleErr,
+  onTitleChange,
+  onRemove,
+}: SortableImageEntryProps): JSX.Element {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: entry.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : 1,
+  };
+
+  return (
+    <li
+      ref={setNodeRef}
+      style={style}
+      className="flex flex-col gap-3 rounded-md border border-border bg-background p-3 sm:flex-row sm:items-start"
+    >
+      {/* Drag Handle Element */}
+      <div
+        {...attributes}
+        {...listeners}
+        className="mt-2 flex cursor-grab items-center justify-center text-muted-foreground hover:text-foreground active:cursor-grabbing"
+      >
+        <GripVertical className="h-5 w-5" />
+      </div>
+
+      <img
+        src={entry.previewUrl}
+        alt={entry.title}
+        className="h-20 w-20 flex-shrink-0 rounded-md object-cover"
+      />
+      <div className="flex-1">
+        <Input
+          value={entry.title}
+          onChange={(e) => onTitleChange(entry.id, e.target.value)}
+          onKeyDown={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+          hasError={Boolean(titleErr)}
+          placeholder="Title"
+          maxLength={100}
+        />
+        {titleErr ? (
+          <p className="mt-1 text-xs text-destructive" role="alert">
+            {titleErr}
+          </p>
+        ) : null}
+      </div>
+      <Button
+        type="button"
+        size="sm"
+        variant="secondary"
+        onClick={() => onRemove(entry.id)}
+      >
+        Remove
+      </Button>
+    </li>
+  );
+}
+
 export function UploadAlbumModal({
   open,
   isSubmitting,
@@ -48,6 +143,14 @@ export function UploadAlbumModal({
   const [entries, setEntries] = useState<ImageEntry[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Set up DnD Sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
 
   useEffect(() => {
     if (!open) {
@@ -94,6 +197,18 @@ export function UploadAlbumModal({
     );
   }, []);
 
+  // Handle Drag Reordering
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setEntries((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  }, []);
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     const payload = {
@@ -115,6 +230,7 @@ export function UploadAlbumModal({
       return;
     }
     setErrors({});
+    // The entries are mapped in their current (potentially reordered) state
     await onSubmit({
       title: parsed.data.title,
       visibility: parsed.data.visibility,
@@ -233,51 +349,28 @@ export function UploadAlbumModal({
                 No images selected.
               </div>
             ) : (
-              <ul className="flex flex-col gap-3">
-                {entries.map((entry, idx) => {
-                  const titleErrKey = `images.${idx}.title`;
-                  const titleErr = errors[titleErrKey];
-                  return (
-                    <li
-                      key={entry.id}
-                      className="flex flex-col gap-3 rounded-md border border-border bg-background p-3 sm:flex-row sm:items-start"
-                    >
-                      <img
-                        src={entry.previewUrl}
-                        alt={entry.title}
-                        className="h-20 w-20 flex-shrink-0 rounded-md object-cover"
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={entries.map((e) => e.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <ul className="flex flex-col gap-3">
+                    {entries.map((entry, idx) => (
+                      <SortableImageEntryItem
+                        key={entry.id}
+                        entry={entry}
+                        titleErr={errors[`images.${idx}.title`]}
+                        onTitleChange={handleTitleChange}
+                        onRemove={handleRemove}
                       />
-                      <div className="flex-1">
-                        <Input
-                          value={entry.title}
-                          onChange={(e) =>
-                            handleTitleChange(entry.id, e.target.value)
-                          }
-                          hasError={Boolean(titleErr)}
-                          placeholder="Title"
-                          maxLength={100}
-                        />
-                        {titleErr ? (
-                          <p
-                            className="mt-1 text-xs text-destructive"
-                            role="alert"
-                          >
-                            {titleErr}
-                          </p>
-                        ) : null}
-                      </div>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => handleRemove(entry.id)}
-                      >
-                        Remove
-                      </Button>
-                    </li>
-                  );
-                })}
-              </ul>
+                    ))}
+                  </ul>
+                </SortableContext>
+              </DndContext>
             )}
           </div>
 

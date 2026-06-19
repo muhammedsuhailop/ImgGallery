@@ -17,21 +17,14 @@ export interface Album {
   updatedAt: string;
 }
 
-// export interface AlbumsPayload {
-//   albums: Album[];
-// }
-
-// export interface AlbumPayload {
-//   album: Album;
-// }
 export interface AlbumsPayload {
   albums?: Album[];
-  batches?: Album[]; // Added backend matching key
+  batches?: Album[];
 }
 
 export interface AlbumPayload {
   album?: Album;
-  batch?: Album; // Added backend matching key fallback
+  batch?: Album;
 }
 
 export interface CreateAlbumInput {
@@ -77,6 +70,17 @@ export interface ImageState {
   isDeletingAlbum: boolean;
   isUpdatingAlbumTitle: boolean;
   isAddingImages: boolean;
+  isRearrangingImages: boolean;
 
   error: string | null;
+}
+
+export interface OrderedImageItem {
+  imageId: string;
+  order: number;
+}
+
+export interface RearrangeImagesInput {
+  batchId: string;
+  orderedImages: OrderedImageItem[];
 }

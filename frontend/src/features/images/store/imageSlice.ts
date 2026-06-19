@@ -7,6 +7,7 @@ import {
   deleteImageThunk,
   fetchAlbumThunk,
   fetchAlbumsThunk,
+  rearrangeImagesThunk,
   updateAlbumTitleThunk,
   updateImageThunk,
 } from "./imageThunks";
@@ -22,6 +23,7 @@ const initialState: ImageState = {
   isDeletingAlbum: false,
   isUpdatingAlbumTitle: false,
   isAddingImages: false,
+  isRearrangingImages:false,
   error: null,
 };
 
@@ -172,6 +174,24 @@ const imageSlice = createSlice({
       .addCase(addImagesToAlbumThunk.rejected, (state, action) => {
         state.isAddingImages = false;
         state.error = action.payload ?? "Failed to add images.";
+      })
+      .addCase(rearrangeImagesThunk.pending, (state) => {
+        state.isRearrangingImages = true;
+        state.error = null;
+      })
+      .addCase(rearrangeImagesThunk.fulfilled, (state, action) => {
+        state.isRearrangingImages = false;
+        const album = action.payload;
+        if (album) {
+          state.currentAlbum = album;
+          state.albums = state.albums.map((a) =>
+            a.batchId === album.batchId ? album : a,
+          );
+        }
+      })
+      .addCase(rearrangeImagesThunk.rejected, (state, action) => {
+        state.isRearrangingImages = false;
+        state.error = action.payload ?? "Failed to rearrange images.";
       });
   },
 });
