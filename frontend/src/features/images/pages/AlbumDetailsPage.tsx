@@ -9,6 +9,7 @@ import {
   fetchAlbumThunk,
   updateAlbumTitleThunk,
   updateImageThunk,
+  rearrangeImagesThunk,
 } from "@/features/images/store/imageThunks";
 import {
   clearCurrentAlbum,
@@ -21,8 +22,28 @@ import {
   type UploadImagesSubmitData,
 } from "@/features/images/components/UploadImagesModal";
 import { PageLoader } from "@/shared/components/feedback/PageLoader";
-import { arrayMove } from "@dnd-kit/sortable";
-import { rearrangeImagesThunk } from "@/features/images/store/imageThunks";
+import type { Image } from "@/features/images/types/image.types";
+
+function moveMultipleImages(
+  images: Image[],
+  activeIds: string[],
+  overId: string,
+): Image[] {
+  const overIndex = images.findIndex((img) => img.imageId === overId);
+  if (overIndex === -1) return images;
+
+  const itemsBeingDragged = images.filter((img) =>
+    activeIds.includes(img.imageId),
+  );
+  const remainingItems = images.filter(
+    (img) => !activeIds.includes(img.imageId),
+  );
+
+  const newImages = [...remainingItems];
+  newImages.splice(overIndex, 0, ...itemsBeingDragged);
+
+  return newImages;
+}
 
 export function AlbumDetailsPage(): JSX.Element {
   const { batchId } = useParams<{ batchId: string }>();
@@ -38,8 +59,11 @@ export function AlbumDetailsPage(): JSX.Element {
     isAddingImages,
     error,
   } = useImages();
+
   const [addOpen, setAddOpen] = useState(false);
-  const [localImages, setLocalImages] = useState(currentAlbum?.images ?? []);
+  const [localImages, setLocalImages] = useState<Image[]>(
+    currentAlbum?.images ?? [],
+  );
 
   useEffect(() => {
     if (batchId) {
@@ -97,6 +121,7 @@ export function AlbumDetailsPage(): JSX.Element {
   const handleDeleteImage = useCallback(
     async (imageId: string): Promise<void> => {
       if (!batchId) return;
+      setLocalImages((prev) => prev.filter((img) => img.imageId !== imageId));
       await dispatch(deleteImageThunk({ batchId, imageId }));
     },
     [batchId, dispatch],
@@ -120,23 +145,19 @@ export function AlbumDetailsPage(): JSX.Element {
   );
 
   const handleReorder = useCallback(
-    async (activeId: string, overId: string): Promise<void> => {
+    async (activeIds: string[], overId: string): Promise<void> => {
       if (!batchId) return;
 
-      const oldIndex = localImages.findIndex((img) => img.imageId === activeId);
-      const newIndex = localImages.findIndex((img) => img.imageId === overId);
+      const newArray = moveMultipleImages(localImages, activeIds, overId);
 
-      if (oldIndex !== -1 && newIndex !== -1) {
-        const newArray = arrayMove(localImages, oldIndex, newIndex);
-        setLocalImages(newArray);
+      setLocalImages(newArray);
 
-        const orderedImages = newArray.map((img, index) => ({
-          imageId: img.imageId,
-          order: index,
-        }));
+      const orderedImages = newArray.map((img, index) => ({
+        imageId: img.imageId,
+        order: index,
+      }));
 
-        await dispatch(rearrangeImagesThunk({ batchId, orderedImages }));
-      }
+      await dispatch(rearrangeImagesThunk({ batchId, orderedImages }));
     },
     [batchId, localImages, dispatch],
   );
@@ -180,7 +201,7 @@ export function AlbumDetailsPage(): JSX.Element {
 
       <section className="mt-6">
         <ImageGrid
-          images={currentAlbum.images}
+          images={localImages}
           isUpdating={isUpdatingImage}
           isDeleting={isDeletingImage}
           onUpdateTitle={handleUpdateTitle}

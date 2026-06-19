@@ -1,4 +1,4 @@
-import { memo, useMemo, useState, type JSX } from "react";
+import { memo, useMemo, useState, useCallback, type JSX } from "react";
 import {
   DndContext,
   closestCenter,
@@ -6,7 +6,9 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  DragOverlay,
   type DragEndEvent,
+  type DragStartEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -26,16 +28,23 @@ export interface ImageGridProps {
   onUpdateTitle: (imageId: string, title: string) => void | Promise<void>;
   onReplaceFile: (imageId: string, file: File) => void | Promise<void>;
   onDelete: (imageId: string) => void | Promise<void>;
-  onReorder: (activeId: string, overId: string) => void;
+  onReorder: (activeIds: string[], overId: string) => void;
 }
 
 function SortableImageWrapper({
   image,
+  isSelected,
+  onSelectToggle,
   onView,
   ...props
-}: { image: Image } & Omit<
+}: {
+  image: Image;
+  isSelected: boolean;
+  onSelectToggle: (id: string) => void;
+  onView: (image: Image) => void;
+} & Omit<
   React.ComponentProps<typeof ImageCard>,
-  "image"
+  "image" | "isSelected" | "onSelectToggle" | "onView"
 >): JSX.Element {
   const {
     attributes,
@@ -55,7 +64,13 @@ function SortableImageWrapper({
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <ImageCard image={image} onView={onView} {...props} />
+      <ImageCard
+        image={image}
+        isSelected={isSelected}
+        onSelectToggle={onSelectToggle}
+        onView={onView}
+        {...props}
+      />
     </div>
   );
 }
@@ -78,7 +93,47 @@ function ImageGridComponent({
 
   const [selectedImage, setSelectedImage] = useState<Image | null>(null);
 
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
+
   const imageIds = useMemo(() => images.map((img) => img.imageId), [images]);
+  const activeImage = useMemo(
+    () => images.find((img) => img.imageId === activeDragId),
+    [activeDragId, images],
+  );
+
+  const toggleSelection = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) newSet.delete(id);
+      else newSet.add(id);
+      return newSet;
+    });
+  }, []);
+
+  function handleDragStart(event: DragStartEvent) {
+    const { active } = event;
+    setActiveDragId(active.id as string);
+
+    if (!selectedIds.has(active.id as string)) {
+      setSelectedIds(new Set([active.id as string]));
+    }
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { over } = event;
+    setActiveDragId(null);
+
+    if (over && selectedIds.size > 0) {
+      const isDroppingOnSelf = selectedIds.has(over.id as string);
+
+      if (!isDroppingOnSelf) {
+        onReorder(Array.from(selectedIds), over.id as string);
+      }
+    }
+
+    setSelectedIds(new Set());
+  }
 
   if (images.length === 0) {
     return (
@@ -96,19 +151,14 @@ function ImageGridComponent({
   else if (count >= 4)
     gridColsClass = "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
 
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      onReorder(active.id as string, over.id as string);
-    }
-  }
-
   return (
     <>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
+        onDragCancel={() => setActiveDragId(null)}
       >
         <SortableContext items={imageIds} strategy={rectSortingStrategy}>
           <div className={`grid gap-6 ${gridColsClass}`}>
@@ -116,6 +166,8 @@ function ImageGridComponent({
               <SortableImageWrapper
                 key={image.imageId}
                 image={image}
+                isSelected={selectedIds.has(image.imageId)}
+                onSelectToggle={toggleSelection}
                 isUpdating={isUpdating}
                 isDeleting={isDeleting}
                 onUpdateTitle={onUpdateTitle}
@@ -126,7 +178,26 @@ function ImageGridComponent({
             ))}
           </div>
         </SortableContext>
+
+        <DragOverlay>
+          {activeDragId && activeImage ? (
+            <div className="relative">
+              <ImageCard
+                image={activeImage}
+                isUpdating={false}
+                isDeleting={false}
+                isSelected={true}
+              />
+              {selectedIds.size > 1 && (
+                <div className="absolute -right-3 -top-3 z-50 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground shadow-lg">
+                  {selectedIds.size}
+                </div>
+              )}
+            </div>
+          ) : null}
+        </DragOverlay>
       </DndContext>
+
       {selectedImage && (
         <ImageModal
           imageUrl={selectedImage.url}
