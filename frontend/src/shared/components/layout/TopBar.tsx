@@ -5,6 +5,7 @@ import { useAppDispatch } from "@/app/store/hooks";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { logoutThunk } from "@/features/auth/store/authThunks";
 import { Button } from "@/shared/components/ui/Button";
+import { ThemeToggle } from "@/shared/components/ui/ThemeToggle";
 
 export function TopBar(): JSX.Element {
   const { isAuthenticated, user } = useAuth();
@@ -28,11 +29,12 @@ export function TopBar(): JSX.Element {
           ImgGallery
         </Link>
 
-        <nav className="hidden items-center gap-3 sm:flex">
+        {/* Desktop View Menu */}
+        <nav className="hidden items-center gap-4 sm:flex">
           {isAuthenticated ? (
             <>
               <span className="text-sm text-muted-foreground">
-                {user?.email}
+                {user?.name}
               </span>
               <Button variant="secondary" size="sm" onClick={handleLogout}>
                 Logout
@@ -51,19 +53,31 @@ export function TopBar(): JSX.Element {
               </Link>
             </>
           )}
+          <div className="border-l border-border pl-2">
+            <ThemeToggle />
+          </div>
         </nav>
 
-        <button
-          type="button"
-          onClick={() => setMenuOpen((v) => !v)}
-          aria-label={menuOpen ? "Close menu" : "Open menu"}
-          aria-expanded={menuOpen}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border sm:hidden"
-        >
-          {menuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-        </button>
+        {/* Mobile View Header Layout triggers */}
+        <div className="flex items-center gap-2 sm:hidden">
+          <ThemeToggle />
+          <button
+            type="button"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border"
+          >
+            {menuOpen ? (
+              <X className="h-4 w-4" />
+            ) : (
+              <Menu className="h-4 w-4" />
+            )}
+          </button>
+        </div>
       </div>
 
+      {/* Mobile Dropdown Options Drawer */}
       {menuOpen ? (
         <div className="border-t border-border bg-background sm:hidden">
           <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-3">

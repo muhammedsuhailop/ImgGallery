@@ -7,6 +7,8 @@ import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { RegisterPage } from "@/features/auth/pages/RegisterPage";
 import { DashboardPage } from "@/features/auth/pages/DashboardPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
+import { AlbumDetailsPage } from "@/features/images/pages/AlbumDetailsPage";
+import { ImagesPage } from "@/features/images/pages/ImagesPage";
 
 export function AppRouter(): JSX.Element {
   return (
@@ -36,6 +38,22 @@ export function AppRouter(): JSX.Element {
             element={
               <ProtectedRoute>
                 <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/images"
+            element={
+              <ProtectedRoute>
+                <ImagesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/images/:batchId"
+            element={
+              <ProtectedRoute>
+                <AlbumDetailsPage />
               </ProtectedRoute>
             }
           />
