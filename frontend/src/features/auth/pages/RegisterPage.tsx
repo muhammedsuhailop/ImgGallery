@@ -13,12 +13,15 @@ import {
 import { Button } from "@/shared/components/ui/Button";
 import { Input } from "@/shared/components/ui/Input";
 import { FormField } from "@/shared/components/ui/FormField";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 export function RegisterPage(): JSX.Element {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { isLoading, error } = useAuth();
   const [success, setSuccess] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -32,11 +35,20 @@ export function RegisterPage(): JSX.Element {
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { name: "", email: "", phoneNumber: "", password: "" },
+    defaultValues: {
+      name: "",
+      email: "",
+      phoneNumber: "",
+      password: "",
+      confirmPassword: "",
+    },
   });
 
   const onSubmit = handleSubmit(async (values) => {
-    const result = await dispatch(registerThunk(values));
+    const { confirmPassword, ...payload } = values;
+
+    const result = await dispatch(registerThunk(payload));
+
     if (registerThunk.fulfilled.match(result)) {
       setSuccess("Registration successful. You can now sign in.");
       setTimeout(() => navigate("/login", { replace: true }), 1200);
@@ -113,14 +125,60 @@ export function RegisterPage(): JSX.Element {
             helperText="At least 8 characters with uppercase, lowercase and a number."
             required
           >
-            <Input
-              id="password"
-              type="password"
-              autoComplete="new-password"
-              hasError={Boolean(errors.password)}
-              placeholder="••••••••"
-              {...register("password")}
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                hasError={Boolean(errors.password)}
+                placeholder="••••••••"
+                className="pr-10"
+                {...register("password")}
+              />
+
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+              </button>
+            </div>
+          </FormField>
+
+          <FormField
+            id="confirmPassword"
+            label="Confirm password"
+            error={errors.confirmPassword?.message}
+            required
+          >
+            <div className="relative">
+              <Input
+                id="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                autoComplete="new-password"
+                hasError={Boolean(errors.confirmPassword)}
+                placeholder="••••••••"
+                className="pr-10"
+                {...register("confirmPassword")}
+              />
+
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((prev) => !prev)}
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground"
+                aria-label={
+                  showConfirmPassword ? "Hide password" : "Show password"
+                }
+              >
+                {showConfirmPassword ? (
+                  <FiEyeOff size={18} />
+                ) : (
+                  <FiEye size={18} />
+                )}
+              </button>
+            </div>
           </FormField>
 
           {error ? (

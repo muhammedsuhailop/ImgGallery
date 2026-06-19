@@ -1,4 +1,4 @@
-import { useEffect, type JSX } from "react";
+import { useEffect, useState, type JSX } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -13,6 +13,7 @@ import {
 import { Button } from "@/shared/components/ui/Button";
 import { Input } from "@/shared/components/ui/Input";
 import { FormField } from "@/shared/components/ui/FormField";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 interface LocationState {
   from?: { pathname?: string };
@@ -23,6 +24,7 @@ export function LoginPage(): JSX.Element {
   const navigate = useNavigate();
   const location = useLocation();
   const { isLoading, error } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
 
   const state = location.state as LocationState | null;
   const redirectTo = state?.from?.pathname ?? "/dashboard";
@@ -86,14 +88,26 @@ export function LoginPage(): JSX.Element {
             error={errors.password?.message}
             required
           >
-            <Input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              hasError={Boolean(errors.password)}
-              placeholder="••••••••"
-              {...register("password")}
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                hasError={Boolean(errors.password)}
+                placeholder="••••••••"
+                className="pr-10"
+                {...register("password")}
+              />
+
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+              </button>
+            </div>
           </FormField>
 
           {error ? (
