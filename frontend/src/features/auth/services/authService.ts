@@ -1,4 +1,4 @@
-import { api } from "@/shared/api/axios";
+import { api, RetriableRequestConfig } from "@/shared/api/axios";
 import type { ApiResponse } from "@/shared/api/apiTypes";
 import type {
   AuthUserPayload,
@@ -12,6 +12,9 @@ class AuthService {
     const response = await api.post<ApiResponse<undefined>>(
       "/auth/login",
       payload,
+      {
+        _skipAuthRefresh: true,
+      } as RetriableRequestConfig,
     );
     return response.data;
   }
@@ -32,7 +35,9 @@ class AuthService {
   }
 
   async getCurrentUser(): Promise<ApiResponse<AuthUserPayload>> {
-    const response = await api.get<ApiResponse<AuthUserPayload>>("/auth/me");
+    const response = await api.get<ApiResponse<AuthUserPayload>>("/auth/me", {
+      _skipAuthRefresh: true,
+    } as RetriableRequestConfig);
     return response.data;
   }
 

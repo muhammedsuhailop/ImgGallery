@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { ApiResponse } from "../../../utils/ApiResponse";
 import { IAuthService } from "../services/IAuthService";
-import { setAuthCookies } from "../../../utils/cookies";
+import { clearAuthCookies, setAuthCookies } from "../../../utils/cookies";
 import { AuthRequest } from "../../../middleware/auth.middleware";
 
 export class AuthController {
@@ -35,6 +35,8 @@ export class AuthController {
 
   logout = async (req: Request, res: Response): Promise<void> => {
     await this.authService.logout(req.cookies.refreshToken);
+
+    clearAuthCookies(res);
 
     res.status(200).json(new ApiResponse(true, "Logout successful"));
   };

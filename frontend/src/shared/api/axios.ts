@@ -7,7 +7,7 @@ import axios, {
 import { env } from "@/shared/config/env";
 import type { ApiErrorResponse } from "./apiTypes";
 
-interface RetriableRequestConfig extends InternalAxiosRequestConfig {
+export interface RetriableRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
   _skipAuthRefresh?: boolean;
 }
@@ -28,42 +28,64 @@ let refreshPromise: Promise<void> | null = null;
 async function refreshSession(): Promise<void> {
   if (!refreshPromise) {
     refreshPromise = axios
-      .post<void>(
+      .post(
         `${env.apiUrl}/auth/refresh-token`,
         {},
-        { withCredentials: true },
+        {
+          withCredentials: true,
+        },
       )
       .then(() => undefined)
       .finally(() => {
         refreshPromise = null;
       });
   }
+
   await refreshPromise;
 }
+
+const AUTH_ENDPOINTS = [
+  "/auth/login",
+  "/auth/register",
+  "/auth/logout",
+  "/auth/me",
+  "/auth/refresh-token",
+];
 
 api.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error: AxiosError<ApiErrorResponse>) => {
     const originalRequest = error.config as RetriableRequestConfig | undefined;
 
+    const requestUrl = originalRequest?.url ?? "";
+
+    const isAuthRequest = AUTH_ENDPOINTS.some((endpoint) =>
+      requestUrl.includes(endpoint),
+    );
+
     if (
       error.response?.status === 401 &&
       originalRequest &&
       !originalRequest._retry &&
-      !originalRequest._skipAuthRefresh
+      !originalRequest._skipAuthRefresh &&
+      !isAuthRequest
     ) {
       originalRequest._retry = true;
+
       try {
         await refreshSession();
+
         return api(originalRequest);
-      } catch (refreshError) {
+      } catch {
         if (typeof window !== "undefined") {
-          const path = window.location.pathname;
-          if (path !== "/login" && path !== "/register") {
-            window.location.assign("/login");
+          const currentPath = window.location.pathname;
+
+          if (currentPath !== "/login" && currentPath !== "/register") {
+            window.location.replace("/login");
           }
         }
-        return Promise.reject(refreshError);
+
+        return Promise.reject(error);
       }
     }
 
@@ -71,4 +93,4 @@ api.interceptors.response.use(
   },
 );
 
-export type { RetriableRequestConfig };
+export type { AxiosError };
