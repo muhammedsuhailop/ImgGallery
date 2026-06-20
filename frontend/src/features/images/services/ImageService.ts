@@ -11,17 +11,19 @@ import type {
   UpdateAlbumTitleInput,
   UpdateImageInput,
 } from "@/features/images/types/image.types";
+import { ApiEndpoints } from "@/shared/constants/apiEndpoints";
 
 class ImageService {
   async getAlbums(): Promise<ApiResponse<AlbumsPayload | Album[]>> {
-    const response =
-      await api.get<ApiResponse<AlbumsPayload | Album[]>>("/images");
+    const response = await api.get<ApiResponse<AlbumsPayload | Album[]>>(
+      ApiEndpoints.IMAGES,
+    );
     return response.data;
   }
 
   async getAlbum(batchId: string): Promise<ApiResponse<AlbumPayload | Album>> {
     const response = await api.get<ApiResponse<AlbumPayload | Album>>(
-      `/images/${batchId}`,
+      ApiEndpoints.ALBUM(batchId),
     );
     return response.data;
   }
@@ -40,7 +42,7 @@ class ImageService {
     });
 
     const response = await api.post<ApiResponse<AlbumPayload | Album>>(
-      "/images",
+      ApiEndpoints.IMAGES,
       formData,
       { headers: { "Content-Type": "multipart/form-data" } },
     );
@@ -69,7 +71,7 @@ class ImageService {
     }
 
     const response = await api.patch<ApiResponse<AlbumPayload | Album>>(
-      `/images/${batchId}/images/${imageId}`,
+      ApiEndpoints.IMAGE_ITEM(batchId, imageId),
       body,
       headers ? { headers } : undefined,
     );
@@ -78,14 +80,14 @@ class ImageService {
 
   async deleteImage(input: DeleteImageInput): Promise<ApiResponse<undefined>> {
     const response = await api.delete<ApiResponse<undefined>>(
-      `/images/${input.batchId}/images/${input.imageId}`,
+      ApiEndpoints.IMAGE_ITEM(input.batchId, input.imageId),
     );
     return response.data;
   }
 
   async deleteAlbum(batchId: string): Promise<ApiResponse<undefined>> {
     const response = await api.delete<ApiResponse<undefined>>(
-      `/images/${batchId}`,
+      ApiEndpoints.ALBUM(batchId),
     );
     return response.data;
   }
@@ -94,7 +96,7 @@ class ImageService {
     input: UpdateAlbumTitleInput,
   ): Promise<ApiResponse<AlbumPayload | Album>> {
     const response = await api.patch<ApiResponse<AlbumPayload | Album>>(
-      `/images/${input.batchId}`,
+      ApiEndpoints.ALBUM(input.batchId),
       { title: input.title },
     );
     return response.data;
@@ -108,7 +110,7 @@ class ImageService {
     input.titles.forEach((title) => formData.append("titles[]", title));
 
     const response = await api.post<ApiResponse<AlbumPayload | Album>>(
-      `/images/${input.batchId}/images`,
+      ApiEndpoints.ALBUM_IMAGES(input.batchId),
       formData,
       { headers: { "Content-Type": "multipart/form-data" } },
     );
@@ -119,7 +121,7 @@ class ImageService {
     input: RearrangeImagesInput,
   ): Promise<ApiResponse<AlbumPayload | Album>> {
     const response = await api.put<ApiResponse<AlbumPayload | Album>>(
-      `/images/${input.batchId}/rearrange`,
+      ApiEndpoints.REARRANGE_IMAGES(input.batchId),
       { orderedImages: input.orderedImages },
     );
     return response.data;

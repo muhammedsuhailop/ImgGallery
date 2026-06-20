@@ -6,11 +6,12 @@ import type {
   RegisterRequest,
   RegisteredUserPayload,
 } from "@/features/auth/types/auth.types";
+import { ApiEndpoints } from "@/shared/constants/apiEndpoints";
 
 class AuthService {
   async login(payload: LoginRequest): Promise<ApiResponse<undefined>> {
     const response = await api.post<ApiResponse<undefined>>(
-      "/auth/login",
+      ApiEndpoints.LOGIN,
       payload,
       {
         _skipAuthRefresh: true,
@@ -23,27 +24,32 @@ class AuthService {
     payload: RegisterRequest,
   ): Promise<ApiResponse<RegisteredUserPayload>> {
     const response = await api.post<ApiResponse<RegisteredUserPayload>>(
-      "/auth/register",
+      ApiEndpoints.REGISTER,
       payload,
     );
     return response.data;
   }
 
   async logout(): Promise<ApiResponse<undefined>> {
-    const response = await api.post<ApiResponse<undefined>>("/auth/logout");
+    const response = await api.post<ApiResponse<undefined>>(
+      ApiEndpoints.LOGOUT,
+    );
     return response.data;
   }
 
   async getCurrentUser(): Promise<ApiResponse<AuthUserPayload>> {
-    const response = await api.get<ApiResponse<AuthUserPayload>>("/auth/me", {
-      _skipAuthRefresh: true,
-    } as RetriableRequestConfig);
+    const response = await api.get<ApiResponse<AuthUserPayload>>(
+      ApiEndpoints.GET_CURRENT_USER,
+      {
+        _skipAuthRefresh: true,
+      } as RetriableRequestConfig,
+    );
     return response.data;
   }
 
   async refreshToken(): Promise<ApiResponse<undefined>> {
     const response = await api.post<ApiResponse<undefined>>(
-      "/auth/refresh-token",
+      ApiEndpoints.REFRESH_TOKEN,
     );
     return response.data;
   }

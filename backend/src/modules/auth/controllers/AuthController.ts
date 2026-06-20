@@ -3,6 +3,8 @@ import { ApiResponse } from "../../../utils/ApiResponse";
 import { IAuthService } from "../services/IAuthService";
 import { clearAuthCookies, setAuthCookies } from "../../../utils/cookies";
 import { AuthRequest } from "../../../middleware/auth.middleware";
+import { HttpStatus } from "../../../constants/httpStatus.constants";
+import { AuthMessages } from "../../../constants/authMessages.constants";
 
 export class AuthController {
   constructor(private readonly authService: IAuthService) {}
@@ -11,8 +13,8 @@ export class AuthController {
     const result = await this.authService.register(req.body);
 
     res
-      .status(201)
-      .json(new ApiResponse(true, "Registration successful", result));
+      .status(HttpStatus.CREATED)
+      .json(new ApiResponse(true, AuthMessages.REGISTRATION_SUCCESS, result));
   };
 
   login = async (req: Request, res: Response): Promise<void> => {
@@ -20,7 +22,9 @@ export class AuthController {
 
     setAuthCookies(res, result.accessToken, result.refreshToken);
 
-    res.status(200).json(new ApiResponse(true, "Login successful"));
+    res
+      .status(HttpStatus.OK)
+      .json(new ApiResponse(true, AuthMessages.LOGIN_SUCCESS));
   };
 
   refreshToken = async (req: Request, res: Response): Promise<void> => {
@@ -30,7 +34,9 @@ export class AuthController {
 
     setAuthCookies(res, result.accessToken, result.refreshToken);
 
-    res.status(200).json(new ApiResponse(true, "Token refreshed"));
+    res
+      .status(HttpStatus.OK)
+      .json(new ApiResponse(true, AuthMessages.TOKEN_REFRESHED));
   };
 
   logout = async (req: Request, res: Response): Promise<void> => {
@@ -38,7 +44,9 @@ export class AuthController {
 
     clearAuthCookies(res);
 
-    res.status(200).json(new ApiResponse(true, "Logout successful"));
+    res
+      .status(HttpStatus.OK)
+      .json(new ApiResponse(true, AuthMessages.LOGOUT_SUCCESS));
   };
 
   getMe = async (req: Request, res: Response): Promise<void> => {
@@ -46,6 +54,8 @@ export class AuthController {
 
     const result = await this.authService.getMe(authReq.userId);
 
-    res.status(200).json(new ApiResponse(true, "User data fetched", result));
+    res
+      .status(HttpStatus.OK)
+      .json(new ApiResponse(true, AuthMessages.USER_DATA_FETCHED, result));
   };
 }

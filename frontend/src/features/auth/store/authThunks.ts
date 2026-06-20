@@ -6,13 +6,14 @@ import type {
 } from "@/features/auth/types/auth.types";
 import type { RegisteredUser, User } from "@/features/auth/types/user.types";
 import { getErrorMessage } from "@/utils/getErrorMessage";
+import { ApiEndpoints } from "@/shared/constants/apiEndpoints";
 
 export interface ThunkApiConfig {
   rejectValue: string;
 }
 
 export const loginThunk = createAsyncThunk<User, LoginRequest, ThunkApiConfig>(
-  "auth/login",
+  ApiEndpoints.LOGIN,
   async (payload, { rejectWithValue, dispatch }) => {
     try {
       await authService.login(payload);
@@ -32,7 +33,7 @@ export const registerThunk = createAsyncThunk<
   RegisteredUser,
   RegisterRequest,
   ThunkApiConfig
->("auth/register", async (payload, { rejectWithValue }) => {
+>(ApiEndpoints.REGISTER, async (payload, { rejectWithValue }) => {
   try {
     const response = await authService.register(payload);
     if (!response.data?.user) {
@@ -45,7 +46,7 @@ export const registerThunk = createAsyncThunk<
 });
 
 export const logoutThunk = createAsyncThunk<void, void, ThunkApiConfig>(
-  "auth/logout",
+  ApiEndpoints.LOGOUT,
   async (_, { rejectWithValue }) => {
     try {
       await authService.logout();
@@ -56,7 +57,7 @@ export const logoutThunk = createAsyncThunk<void, void, ThunkApiConfig>(
 );
 
 export const getCurrentUserThunk = createAsyncThunk<User, void, ThunkApiConfig>(
-  "auth/getCurrentUser",
+  ApiEndpoints.GET_CURRENT_USER,
   async (_, { rejectWithValue }) => {
     try {
       const response = await authService.getCurrentUser();

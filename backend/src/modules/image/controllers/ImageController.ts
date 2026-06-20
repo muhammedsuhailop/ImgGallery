@@ -6,6 +6,8 @@ import {
   RearrangeImagesDto,
   RearrangeBatchesDto,
 } from "../dto/RearrangeImagesDto";
+import { HttpStatus } from "../../../constants/httpStatus.constants";
+import { ImageMessages } from "../../../constants/imageMessages.constants";
 
 export class ImageController {
   constructor(private readonly imageService: IImageService) {}
@@ -34,8 +36,8 @@ export class ImageController {
     );
 
     res
-      .status(201)
-      .json(new ApiResponse(true, "Images uploaded successfully", result));
+      .status(HttpStatus.CREATED)
+      .json(new ApiResponse(true, ImageMessages.UPLOAD_SUCCESS, result));
   };
 
   getMyBatches = async (req: Request, res: Response): Promise<void> => {
@@ -43,7 +45,9 @@ export class ImageController {
 
     const result = await this.imageService.getMyBatches(authReq.userId);
 
-    res.status(200).json(new ApiResponse(true, "Batches retrieved", result));
+    res
+      .status(HttpStatus.OK)
+      .json(new ApiResponse(true, ImageMessages.BATCHES_RETRIEVED, result));
   };
 
   getBatch = async (req: Request, res: Response): Promise<void> => {
@@ -54,7 +58,9 @@ export class ImageController {
       authReq.userId,
     );
 
-    res.status(200).json(new ApiResponse(true, "Batch retrieved", result));
+    res
+      .status(HttpStatus.OK)
+      .json(new ApiResponse(true, ImageMessages.BATCH_RETRIEVED, result));
   };
 
   updateBatch = async (req: Request, res: Response): Promise<void> => {
@@ -66,7 +72,9 @@ export class ImageController {
       req.body,
     );
 
-    res.status(200).json(new ApiResponse(true, "Batch updated", result));
+    res
+      .status(HttpStatus.OK)
+      .json(new ApiResponse(true, ImageMessages.BATCH_UPDATED, result));
   };
 
   updateImageItem = async (req: Request, res: Response): Promise<void> => {
@@ -82,7 +90,9 @@ export class ImageController {
       file,
     );
 
-    res.status(200).json(new ApiResponse(true, "Image updated", result));
+    res
+      .status(HttpStatus.OK)
+      .json(new ApiResponse(true, ImageMessages.IMAGE_UPDATED, result));
   };
 
   rearrangeImages = async (req: Request, res: Response): Promise<void> => {
@@ -96,7 +106,9 @@ export class ImageController {
       data,
     );
 
-    res.status(200).json(new ApiResponse(true, "Images rearranged", result));
+    res
+      .status(HttpStatus.OK)
+      .json(new ApiResponse(true, ImageMessages.IMAGES_REARRANGED, result));
   };
 
   rearrangeBatches = async (req: Request, res: Response): Promise<void> => {
@@ -109,7 +121,9 @@ export class ImageController {
       data,
     );
 
-    res.status(200).json(new ApiResponse(true, "Batches rearranged", result));
+    res
+      .status(HttpStatus.OK)
+      .json(new ApiResponse(true, ImageMessages.BATCHES_REARRANGED, result));
   };
 
   deleteImageItem = async (req: Request, res: Response): Promise<void> => {
@@ -121,7 +135,9 @@ export class ImageController {
       authReq.userId,
     );
 
-    res.status(200).json(new ApiResponse(true, "Image deleted", result));
+    res
+      .status(HttpStatus.OK)
+      .json(new ApiResponse(true, ImageMessages.IMAGE_DELETED, result));
   };
 
   deleteBatch = async (req: Request, res: Response): Promise<void> => {
@@ -132,6 +148,8 @@ export class ImageController {
       authReq.userId,
     );
 
-    res.status(200).json(new ApiResponse(true, "Batch deleted"));
+    res
+      .status(HttpStatus.OK)
+      .json(new ApiResponse(true, ImageMessages.BATCH_DELETED));
   };
 }
