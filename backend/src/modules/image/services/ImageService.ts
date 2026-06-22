@@ -17,6 +17,8 @@ import {
   RearrangeBatchesDto,
 } from "../dto/RearrangeImagesDto";
 import { UpdateImageBatchDto } from "../dto/UpdateImageBatchDto";
+import { HttpStatus } from "../../../constants/httpStatus.constants";
+import { ImageErrors } from "../../../constants/imageMessages.constants";
 
 export class ImageService implements IImageService {
   constructor(
@@ -51,11 +53,11 @@ export class ImageService implements IImageService {
     visibility: "public" | "private",
   ): Promise<ImageBatchResponse> {
     if (!files.length) {
-      throw new ApiError(400, "At least one image is required");
+      throw new ApiError(HttpStatus.BAD_REQUEST, ImageErrors.IMAGE_REQUIRED);
     }
 
     if (files.length !== titles.length) {
-      throw new ApiError(400, "Each image must have a corresponding title");
+      throw new ApiError(HttpStatus.BAD_REQUEST, ImageErrors.TITLE_MISMATCH);
     }
 
     const uploadResults = await Promise.all(
@@ -91,13 +93,13 @@ export class ImageService implements IImageService {
     const batch = await this.imageRepository.findById(batchId);
 
     if (!batch) {
-      throw new ApiError(404, "Batch not found");
+      throw new ApiError(HttpStatus.NOT_FOUND, ImageErrors.BATCH_NOT_FOUND);
     }
 
     const isOwner = batch.userId === requestingUserId;
 
     if (!isOwner && batch.visibility === "private") {
-      throw new ApiError(403, "Access denied");
+      throw new ApiError(HttpStatus.FORBIDDEN, ImageErrors.ACCESS_DENIED);
     }
 
     return this.toResponse(batch);
@@ -114,7 +116,10 @@ export class ImageService implements IImageService {
     );
 
     if (!existing) {
-      throw new ApiError(404, "Batch not found or access denied");
+      throw new ApiError(
+        HttpStatus.NOT_FOUND,
+        ImageErrors.BATCH_NOT_FOUND_OR_DENIED,
+      );
     }
 
     const updated = await this.imageRepository.updateBatch(
@@ -124,7 +129,10 @@ export class ImageService implements IImageService {
     );
 
     if (!updated) {
-      throw new ApiError(500, "Failed to update batch");
+      throw new ApiError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        ImageErrors.UPDATE_BATCH_FAILED,
+      );
     }
 
     return this.toResponse(updated);
@@ -143,13 +151,16 @@ export class ImageService implements IImageService {
     );
 
     if (!existing) {
-      throw new ApiError(404, "Batch not found or access denied");
+      throw new ApiError(
+        HttpStatus.NOT_FOUND,
+        ImageErrors.BATCH_NOT_FOUND_OR_DENIED,
+      );
     }
 
     const imageToUpdate = existing.images.find((img) => img.id === imageId);
 
     if (!imageToUpdate) {
-      throw new ApiError(404, "Image not found in this batch");
+      throw new ApiError(HttpStatus.NOT_FOUND, ImageErrors.IMAGE_NOT_FOUND);
     }
 
     const updateData: UpdateImageItemDto = { ...data };
@@ -170,7 +181,10 @@ export class ImageService implements IImageService {
     );
 
     if (!updated) {
-      throw new ApiError(500, "Failed to update image");
+      throw new ApiError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        ImageErrors.UPDATE_IMAGE_FAILED,
+      );
     }
 
     return this.toResponse(updated);
@@ -187,13 +201,19 @@ export class ImageService implements IImageService {
     );
 
     if (!existing) {
-      throw new ApiError(404, "Batch not found or access denied");
+      throw new ApiError(
+        HttpStatus.NOT_FOUND,
+        ImageErrors.BATCH_NOT_FOUND_OR_DENIED,
+      );
     }
 
     const updated = await this.imageRepository.rearrangeImages(batchId, data);
 
     if (!updated) {
-      throw new ApiError(500, "Failed to rearrange images");
+      throw new ApiError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        ImageErrors.REARRANGE_IMAGES_FAILED,
+      );
     }
 
     return this.toResponse(updated);
@@ -222,13 +242,16 @@ export class ImageService implements IImageService {
     );
 
     if (!existing) {
-      throw new ApiError(404, "Batch not found or access denied");
+      throw new ApiError(
+        HttpStatus.NOT_FOUND,
+        ImageErrors.BATCH_NOT_FOUND_OR_DENIED,
+      );
     }
 
     const imageToDelete = existing.images.find((img) => img.id === imageId);
 
     if (!imageToDelete) {
-      throw new ApiError(404, "Image not found in this batch");
+      throw new ApiError(HttpStatus.NOT_FOUND, ImageErrors.IMAGE_NOT_FOUND);
     }
 
     await this.storageService.delete(imageToDelete.publicId);
@@ -240,7 +263,10 @@ export class ImageService implements IImageService {
     );
 
     if (!updated) {
-      throw new ApiError(500, "Failed to delete image");
+      throw new ApiError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        ImageErrors.DELETE_IMAGE_FAILED,
+      );
     }
 
     return this.toResponse(updated);
@@ -253,7 +279,10 @@ export class ImageService implements IImageService {
     );
 
     if (!existing) {
-      throw new ApiError(404, "Batch not found or access denied");
+      throw new ApiError(
+        HttpStatus.NOT_FOUND,
+        ImageErrors.BATCH_NOT_FOUND_OR_DENIED,
+      );
     }
 
     await Promise.all(

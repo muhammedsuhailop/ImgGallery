@@ -1,6 +1,9 @@
 import { v2 as cloudinary } from "cloudinary";
 import { IStorageService, UploadResult } from "./IStorageService";
 import { ApiError } from "../../../utils/ApiError";
+import { HttpStatus } from "../../../constants/httpStatus.constants";
+import { StorageErrors } from "../../../constants/imageMessages.constants";
+import { CloudinaryConfig } from "../../../constants/CloudinaryConfig";
 
 export class CloudinaryStorageService implements IStorageService {
   constructor() {
@@ -14,10 +17,18 @@ export class CloudinaryStorageService implements IStorageService {
   async upload(file: Express.Multer.File): Promise<UploadResult> {
     return new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
-        { folder: "img-gallery", resource_type: "image" },
+        {
+          folder: CloudinaryConfig.FOLDER,
+          resource_type: CloudinaryConfig.RESOURCE_TYPE,
+        },
         (error, result) => {
           if (error || !result) {
-            return reject(new ApiError(500, "Image upload failed"));
+            return reject(
+              new ApiError(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                StorageErrors.UPLOAD_FAILED,
+              ),
+            );
           }
 
           resolve({ url: result.secure_url, publicId: result.public_id });
