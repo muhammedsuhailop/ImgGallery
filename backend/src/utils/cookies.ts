@@ -11,17 +11,19 @@ export const setAuthCookies = (
   accessToken: string,
   refreshToken: string,
 ): void => {
-  res.cookie(ACCESS_TOKEN_COOKIE, accessToken, {
+  const cookieOptions = {
     httpOnly: true,
     secure: isProduction,
-    sameSite: "strict",
+    sameSite: (isProduction ? "none" : "lax") as "none" | "lax",
+  };
+
+  res.cookie(ACCESS_TOKEN_COOKIE, accessToken, {
+    ...cookieOptions,
     maxAge: 10 * 60 * 1000,
   });
 
   res.cookie(REFRESH_TOKEN_COOKIE, refreshToken, {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: "strict",
+    ...cookieOptions,
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 };
@@ -30,7 +32,7 @@ export const clearAuthCookies = (res: Response): void => {
   const cookieOptions = {
     httpOnly: true,
     secure: isProduction,
-    sameSite: "strict" as const,
+    sameSite: (isProduction ? "none" : "lax") as "none" | "lax",
   };
 
   res.clearCookie(ACCESS_TOKEN_COOKIE, cookieOptions);
