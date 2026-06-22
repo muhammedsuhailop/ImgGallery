@@ -15,7 +15,7 @@ export const setAuthCookies = (
     httpOnly: true,
     secure: isProduction,
     sameSite: "strict",
-    maxAge: 15 * 60 * 1000,
+    maxAge: 10 * 60 * 1000,
   });
 
   res.cookie(REFRESH_TOKEN_COOKIE, refreshToken, {
@@ -27,7 +27,12 @@ export const setAuthCookies = (
 };
 
 export const clearAuthCookies = (res: Response): void => {
-  res.clearCookie(ACCESS_TOKEN_COOKIE);
+  const cookieOptions = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: "strict" as const,
+  };
 
-  res.clearCookie(REFRESH_TOKEN_COOKIE);
+  res.clearCookie(ACCESS_TOKEN_COOKIE, cookieOptions);
+  res.clearCookie(REFRESH_TOKEN_COOKIE, cookieOptions);
 };

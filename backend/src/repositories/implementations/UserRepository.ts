@@ -33,4 +33,10 @@ export class UserRepository implements IUserRepository {
 
     return toUserEntity(user);
   }
+
+  async updatePassword(userId: string, hashedPassword: string): Promise<void> {
+    await UserModel.findByIdAndUpdate(userId, {
+      $set: { password: hashedPassword },
+    });
+  }
 }

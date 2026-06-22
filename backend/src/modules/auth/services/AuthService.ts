@@ -14,11 +14,14 @@ import { RegisterResponse } from "../responses/RegisterResponse";
 import { RefreshTokenResponse } from "../responses/RefreshTokenResponse";
 import { LoginResponse } from "../responses/LoginResponse";
 import { IAuthService } from "./IAuthService";
+import { MeResponse } from "../responses/MeResponse";
+import { ResetPasswordDto } from "../dto/ResetPasswordDto";
+import { HttpStatus } from "../../../constants/httpStatus.constants";
+import { AuthErrors } from "../../../constants/authMessages.constants";
 
 export class AuthService implements IAuthService {
   constructor(
     private readonly userRepository: IUserRepository,
-
     private readonly refreshTokenRepository: IRefreshTokenRepository,
   ) {}
 
@@ -26,7 +29,7 @@ export class AuthService implements IAuthService {
     const existingEmail = await this.userRepository.findByEmail(data.email);
 
     if (existingEmail) {
-      throw new ApiError(409, "Email already exists");
+      throw new ApiError(HttpStatus.BAD_REQUEST, AuthErrors.EMAIL_EXISTS);
     }
 
     const existingPhone = await this.userRepository.findByPhoneNumber(
@@ -34,7 +37,7 @@ export class AuthService implements IAuthService {
     );
 
     if (existingPhone) {
-      throw new ApiError(409, "Phone number already exists");
+      throw new ApiError(HttpStatus.BAD_REQUEST, AuthErrors.PHONE_EXISTS);
     }
 
     const password = await hashPassword(data.password);
@@ -47,6 +50,7 @@ export class AuthService implements IAuthService {
     return {
       user: {
         id: user.id,
+        name: user.name,
         email: user.email,
         phoneNumber: user.phoneNumber,
       },
@@ -57,13 +61,19 @@ export class AuthService implements IAuthService {
     const user = await this.userRepository.findByEmail(data.email);
 
     if (!user) {
-      throw new ApiError(401, "Invalid credentials");
+      throw new ApiError(
+        HttpStatus.UNAUTHORIZED,
+        AuthErrors.INVALID_CREDENTIALS,
+      );
     }
 
     const isValid = await comparePassword(data.password, user.password);
 
     if (!isValid) {
-      throw new ApiError(401, "Invalid credentials");
+      throw new ApiError(
+        HttpStatus.UNAUTHORIZED,
+        AuthErrors.INVALID_CREDENTIALS,
+      );
     }
 
     const accessToken = generateAccessToken(user.id);
@@ -90,7 +100,10 @@ export class AuthService implements IAuthService {
     );
 
     if (!storedToken) {
-      throw new ApiError(401, "Invalid refresh token");
+      throw new ApiError(
+        HttpStatus.UNAUTHORIZED,
+        AuthErrors.INVALID_REFRESH_TOKEN,
+      );
     }
 
     await this.refreshTokenRepository.deleteByToken(hashToken(refreshToken));
@@ -117,5 +130,49 @@ export class AuthService implements IAuthService {
     }
 
     await this.refreshTokenRepository.deleteByToken(hashToken(refreshToken));
+  }
+
+  async getMe(userId: string): Promise<MeResponse> {
+    const user = await this.userRepository.findById(userId);
+
+    if (!user) {
+      throw new ApiError(HttpStatus.NOT_FOUND, AuthErrors.USER_NOT_FOUND);
+    }
+
+    return {
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+      },
+    };
+  }
+
+  async resetPassword(userId: string, data: ResetPasswordDto): Promise<void> {
+    const user = await this.userRepository.findById(userId);
+
+    if (!user) {
+      throw new ApiError(HttpStatus.NOT_FOUND, AuthErrors.USER_NOT_FOUND);
+    }
+
+    const isValid = await comparePassword(data.currentPassword, user.password);
+
+    if (!isValid) {
+      throw new ApiError(
+        HttpStatus.BAD_REQUEST,
+        AuthErrors.INCORRECT_CURRENT_PASSWORD,
+      );
+    }
+
+    if (data.currentPassword === data.newPassword) {
+      throw new ApiError(HttpStatus.BAD_REQUEST, AuthErrors.SAME_PASSWORD);
+    }
+
+    const hashed = await hashPassword(data.newPassword);
+
+    await this.userRepository.updatePassword(userId, hashed);
+
+    await this.refreshTokenRepository.deleteByUserId(userId);
   }
 }
