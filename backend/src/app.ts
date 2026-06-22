@@ -11,7 +11,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://your-app.vercel.app"],
+    origin: ["http://localhost:5173", "https://img-gallery-dun.vercel.app"],
     credentials: true,
   }),
 );
