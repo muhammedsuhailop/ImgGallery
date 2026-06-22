@@ -186,7 +186,6 @@ export function AlbumDetailsPage(): JSX.Element {
         isDeleting={isDeletingAlbum}
         onBack={handleBack}
         onSaveTitle={handleSaveTitle}
-        onAddImages={() => setAddOpen(true)}
         onDeleteAlbum={handleDeleteAlbum}
       />
 

@@ -10,7 +10,6 @@ export interface AlbumHeaderProps {
   isDeleting: boolean;
   onBack: () => void;
   onSaveTitle: (title: string) => void | Promise<void>;
-  onAddImages: () => void;
   onDeleteAlbum: () => void;
 }
 
@@ -20,7 +19,6 @@ export function AlbumHeader({
   isDeleting,
   onBack,
   onSaveTitle,
-  onAddImages,
   onDeleteAlbum,
 }: AlbumHeaderProps): JSX.Element {
   return (
@@ -49,14 +47,6 @@ export function AlbumHeader({
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            size="md"
-            title="Add Images"
-            onClick={onAddImages}
-            className="px-3"
-          >
-            <Plus className="h-5 w-5" />
-          </Button>
           <Button
             size="md"
             variant="danger"
