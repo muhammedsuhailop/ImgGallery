@@ -27,3 +27,8 @@ export interface AuthState {
   initialized: boolean;
   error: string | null;
 }
+
+export interface ResetPasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}

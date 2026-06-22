@@ -1,6 +1,6 @@
 import { RequestHandler, Router } from "express";
 import { authController } from "../../../container/auth.container";
-import { registerSchema, loginSchema } from "../validations/auth.validation";
+import { registerSchema, loginSchema, resetPasswordSchema } from "../validations/auth.validation";
 import { validateRequest } from "../../../middleware/validateRequest";
 import { asyncHandler } from "../../../middleware/asyncHandler";
 import { authenticate } from "../../../middleware/auth.middleware";
@@ -40,4 +40,11 @@ router.get(
   asyncHandler(authController.getMe),
 );
 
+router.patch(
+  "/reset-password",
+  authenticate as unknown as RequestHandler,
+  validateRequest(resetPasswordSchema),
+  asyncHandler(authController.resetPassword),
+);
+  
 export default router;

@@ -15,6 +15,7 @@ import { RefreshTokenResponse } from "../responses/RefreshTokenResponse";
 import { LoginResponse } from "../responses/LoginResponse";
 import { IAuthService } from "./IAuthService";
 import { MeResponse } from "../responses/MeResponse";
+import { ResetPasswordDto } from "../dto/ResetPasswordDto";
 
 export class AuthService implements IAuthService {
   constructor(
@@ -136,5 +137,32 @@ export class AuthService implements IAuthService {
         phoneNumber: user.phoneNumber,
       },
     };
+  }
+
+  async resetPassword(userId: string, data: ResetPasswordDto): Promise<void> {
+    const user = await this.userRepository.findById(userId);
+
+    if (!user) {
+      throw new ApiError(404, "User not found");
+    }
+
+    const isValid = await comparePassword(data.currentPassword, user.password);
+
+    if (!isValid) {
+      throw new ApiError(400, "Current password is incorrect");
+    }
+
+    if (data.currentPassword === data.newPassword) {
+      throw new ApiError(
+        400,
+        "New password must be different from current password",
+      );
+    }
+
+    const hashed = await hashPassword(data.newPassword);
+
+    await this.userRepository.updatePassword(userId, hashed);
+
+    await this.refreshTokenRepository.deleteByUserId(userId);
   }
 }

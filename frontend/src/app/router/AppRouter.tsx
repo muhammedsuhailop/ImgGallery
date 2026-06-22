@@ -9,6 +9,7 @@ import { DashboardPage } from "@/features/auth/pages/DashboardPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { AlbumDetailsPage } from "@/features/images/pages/AlbumDetailsPage";
 import { ImagesPage } from "@/features/images/pages/ImagesPage";
+import { ResetPasswordPage } from "@/features/auth/pages/ResetPasswordPage";
 
 export function AppRouter(): JSX.Element {
   return (
@@ -23,6 +24,12 @@ export function AppRouter(): JSX.Element {
               <PublicRoute>
                 <LoginPage />
               </PublicRoute>
+            }
+          />
+          <Route
+            path="/reset-password"
+            element={
+                <ResetPasswordPage />
             }
           />
           <Route

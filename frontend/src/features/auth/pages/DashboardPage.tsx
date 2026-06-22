@@ -1,6 +1,7 @@
 import type { JSX } from "react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { Link } from "react-router-dom";
+import { Button } from "@/shared/components/ui/Button";
 
 export function DashboardPage(): JSX.Element {
   const { user } = useAuth();
@@ -54,6 +55,14 @@ export function DashboardPage(): JSX.Element {
             </Link>
           ))}
         </section>
+
+        <footer className="mt-8 flex justify-end border-t border-border pt-6">
+          <Link to="/reset-password">
+            <Button variant="secondary" size="sm">
+              Reset Password
+            </Button>
+          </Link>
+        </footer>
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import type {
   LoginRequest,
   RegisterRequest,
   RegisteredUserPayload,
+  ResetPasswordRequest,
 } from "@/features/auth/types/auth.types";
 import { ApiEndpoints } from "@/shared/constants/apiEndpoints";
 
@@ -50,6 +51,16 @@ class AuthService {
   async refreshToken(): Promise<ApiResponse<undefined>> {
     const response = await api.post<ApiResponse<undefined>>(
       ApiEndpoints.REFRESH_TOKEN,
+    );
+    return response.data;
+  }
+
+  async resetPassword(
+    payload: ResetPasswordRequest,
+  ): Promise<ApiResponse<undefined>> {
+    const response = await api.patch<ApiResponse<undefined>>(
+      ApiEndpoints.RESET_PASSWORD,
+      payload,
     );
     return response.data;
   }

@@ -58,4 +58,16 @@ export class AuthController {
       .status(HttpStatus.OK)
       .json(new ApiResponse(true, AuthMessages.USER_DATA_FETCHED, result));
   };
+
+  resetPassword = async (req: Request, res: Response): Promise<void> => {
+    const authReq = req as AuthRequest;
+
+    await this.authService.resetPassword(authReq.userId, req.body);
+
+    clearAuthCookies(res);
+
+    res
+      .status(HttpStatus.OK)
+      .json(new ApiResponse(true, AuthMessages.PASSWORD_RESET_SUCESS));
+  };
 }

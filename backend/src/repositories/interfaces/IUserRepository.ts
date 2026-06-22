@@ -9,4 +9,6 @@ export interface IUserRepository {
   findByPhoneNumber(phoneNumber: string): Promise<User | null>;
 
   create(data: RegisterDto): Promise<User>;
+
+  updatePassword(userId: string, hashedPassword: string): Promise<void>;
 }

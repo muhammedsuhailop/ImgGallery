@@ -5,8 +5,9 @@ export const ApiEndpoints = {
   LOGOUT: "/auth/logout",
   GET_CURRENT_USER: "/auth/me",
   REFRESH_TOKEN: "/auth/refresh-token",
+  RESET_PASSWORD: "/auth/reset-password",
 
-  // Images 
+  // Images
   IMAGES: "/images",
   ALBUM: (batchId: string) => `/images/${batchId}`,
   IMAGE_ITEM: (batchId: string, imageId: string) =>

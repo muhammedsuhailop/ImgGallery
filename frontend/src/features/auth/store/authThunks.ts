@@ -3,6 +3,7 @@ import { authService } from "@/features/auth/services/authService";
 import type {
   LoginRequest,
   RegisterRequest,
+  ResetPasswordRequest,
 } from "@/features/auth/types/auth.types";
 import type { RegisteredUser, User } from "@/features/auth/types/user.types";
 import { getErrorMessage } from "@/utils/getErrorMessage";
@@ -83,5 +84,18 @@ export const initializeAuthThunk = createAsyncThunk<
     void getErrorMessage(error);
     void rejectWithValue;
     return null;
+  }
+});
+
+export const resetPasswordThunk = createAsyncThunk<
+  void,
+  ResetPasswordRequest,
+  ThunkApiConfig
+>("auth/resetPassword", async (payload, { rejectWithValue }) => {
+  try {
+    await authService.resetPassword(payload);
+    await authService.logout();
+  } catch (error) {
+    return rejectWithValue(getErrorMessage(error));
   }
 });

@@ -33,3 +33,14 @@ export const loginSchema = z.object({
 
   password: z.string().min(1, { message: "Password is required" }),
 });
+
+export const resetPasswordSchema = z.object({
+  currentPassword: z
+    .string()
+    .min(1, { message: "Current password is required" }),
+
+  newPassword: z
+    .string()
+    .min(1, { message: "New password is required" })
+    .min(6, { message: "New password must be at least 6 characters" }),
+});

@@ -7,6 +7,7 @@ import {
   loginThunk,
   logoutThunk,
   registerThunk,
+  resetPasswordThunk,
 } from "./authThunks";
 
 const initialState: AuthState = {
@@ -100,6 +101,21 @@ const authSlice = createSlice({
       .addCase(getCurrentUserThunk.rejected, (state) => {
         state.user = null;
         state.isAuthenticated = false;
+      })
+      // Reset Password
+      .addCase(resetPasswordThunk.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(resetPasswordThunk.fulfilled, (state) => {
+        state.isLoading = false;
+        state.user = null;
+        state.isAuthenticated = false;
+        state.error = null;
+      })
+      .addCase(resetPasswordThunk.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload ?? "Password reset failed.";
       });
   },
 });
