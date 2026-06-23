@@ -50,6 +50,8 @@ interface ImageEntry {
   title: string;
 }
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
 function makeId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
@@ -57,6 +59,7 @@ function makeId(): string {
 interface SortableImageEntryProps {
   entry: ImageEntry;
   titleErr?: string;
+  sizeErr?: string;
   onTitleChange: (id: string, value: string) => void;
   onRemove: (id: string) => void;
 }
@@ -64,6 +67,7 @@ interface SortableImageEntryProps {
 function SortableImageEntryItem({
   entry,
   titleErr,
+  sizeErr,
   onTitleChange,
   onRemove,
 }: SortableImageEntryProps): JSX.Element {
@@ -87,7 +91,9 @@ function SortableImageEntryItem({
     <li
       ref={setNodeRef}
       style={style}
-      className="flex flex-col gap-3 rounded-md border border-border bg-background p-3 sm:flex-row sm:items-start"
+      className={`flex flex-col gap-3 rounded-md border bg-background p-3 sm:flex-row sm:items-start ${
+        sizeErr ? "border-destructive/50 bg-destructive/5" : "border-border"
+      }`}
     >
       {/* Drag Handle Element */}
       <div
@@ -109,13 +115,18 @@ function SortableImageEntryItem({
           onChange={(e) => onTitleChange(entry.id, e.target.value)}
           onKeyDown={(e) => e.stopPropagation()}
           onPointerDown={(e) => e.stopPropagation()}
-          hasError={Boolean(titleErr)}
+          hasError={Boolean(titleErr || sizeErr)}
           placeholder="Title"
           maxLength={100}
         />
         {titleErr ? (
           <p className="mt-1 text-xs text-destructive" role="alert">
             {titleErr}
+          </p>
+        ) : null}
+        {sizeErr ? (
+          <p className="mt-1 text-xs text-destructive font-medium" role="alert">
+            {sizeErr}
           </p>
         ) : null}
       </div>
@@ -143,6 +154,8 @@ export function UploadAlbumModal({
   const [entries, setEntries] = useState<ImageEntry[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const hasSizeError = entries.some((e) => e.file.size > MAX_FILE_SIZE);
 
   // Set up DnD Sensors
   const sensors = useSensors(
@@ -211,6 +224,8 @@ export function UploadAlbumModal({
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
+    if (hasSizeError) return;
+
     const payload = {
       title,
       visibility,
@@ -230,7 +245,6 @@ export function UploadAlbumModal({
       return;
     }
     setErrors({});
-    // The entries are mapped in their current (potentially reordered) state
     await onSubmit({
       title: parsed.data.title,
       visibility: parsed.data.visibility,
@@ -359,15 +373,22 @@ export function UploadAlbumModal({
                   strategy={verticalListSortingStrategy}
                 >
                   <ul className="flex flex-col gap-3">
-                    {entries.map((entry, idx) => (
-                      <SortableImageEntryItem
-                        key={entry.id}
-                        entry={entry}
-                        titleErr={errors[`images.${idx}.title`]}
-                        onTitleChange={handleTitleChange}
-                        onRemove={handleRemove}
-                      />
-                    ))}
+                    {entries.map((entry, idx) => {
+                      const sizeErr =
+                        entry.file.size > MAX_FILE_SIZE
+                          ? "Image size exceeds the 5MB limit."
+                          : undefined;
+                      return (
+                        <SortableImageEntryItem
+                          key={entry.id}
+                          entry={entry}
+                          titleErr={errors[`images.${idx}.title`]}
+                          sizeErr={sizeErr}
+                          onTitleChange={handleTitleChange}
+                          onRemove={handleRemove}
+                        />
+                      );
+                    })}
                   </ul>
                 </SortableContext>
               </DndContext>
@@ -387,7 +408,11 @@ export function UploadAlbumModal({
             <Button type="button" variant="secondary" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" isLoading={isSubmitting}>
+            <Button
+              type="submit"
+              isLoading={isSubmitting}
+              disabled={hasSizeError}
+            >
               Create Album
             </Button>
           </div>
