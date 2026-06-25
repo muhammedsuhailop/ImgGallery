@@ -7,14 +7,28 @@ import imageRoutes from "./modules/image/routes/image.routes";
 
 const app = express();
 
-app.use(express.json());
-app.use(cookieParser());
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://img-gallery-dun.vercel.app",
+];
+
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://img-gallery-dun.vercel.app"],
+    origin(origin, callback) {
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin) || origin.endsWith(".vercel.app")) {
+        return callback(null, true);
+      }
+
+      callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   }),
 );
+
+app.use(express.json());
+app.use(cookieParser());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/images", imageRoutes);
