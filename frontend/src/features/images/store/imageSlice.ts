@@ -1,6 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { ImageState } from "@/features/images/types/image.types";
 import {
+  extractAlbums,
+  extractPaginationMeta,
+} from "@/features/images/services/ImageService";
+import {
   addImagesToAlbumThunk,
   createAlbumThunk,
   deleteAlbumThunk,
@@ -15,6 +19,7 @@ import {
 const initialState: ImageState = {
   albums: [],
   currentAlbum: null,
+  paginationMeta: null,
   isLoadingAlbums: false,
   isLoadingAlbum: false,
   isCreatingAlbum: false,
@@ -23,7 +28,7 @@ const initialState: ImageState = {
   isDeletingAlbum: false,
   isUpdatingAlbumTitle: false,
   isAddingImages: false,
-  isRearrangingImages:false,
+  isRearrangingImages: false,
   error: null,
 };
 
@@ -46,7 +51,8 @@ const imageSlice = createSlice({
       })
       .addCase(fetchAlbumsThunk.fulfilled, (state, action) => {
         state.isLoadingAlbums = false;
-        state.albums = action.payload;
+        state.albums = extractAlbums(action.payload);
+        state.paginationMeta = extractPaginationMeta(action.payload);
       })
       .addCase(fetchAlbumsThunk.rejected, (state, action) => {
         state.isLoadingAlbums = false;

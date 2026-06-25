@@ -9,19 +9,33 @@ import {
 import { clearImagesError } from "@/features/images/store/imageSlice";
 import { AlbumGrid } from "@/features/images/components/AlbumGrid";
 import { UploadAlbumModal } from "@/features/images/components/UploadAlbumModal";
+import { AlbumFilters } from "@/features/images/components/AlbumFilters";
 import { Button } from "@/shared/components/ui/Button";
 import { Spinner } from "@/shared/components/feedback/Spinner";
-import type { CreateAlbumInput } from "@/features/images/types/image.types";
+import type {
+  CreateAlbumInput,
+  AlbumQueryParams,
+} from "@/features/images/types/image.types";
+import { Pagination } from "@/shared/components/ui/Pagination";
 
 export function ImagesPage(): JSX.Element {
   const dispatch = useAppDispatch();
-  const { albums, isLoadingAlbums, isCreatingAlbum, error } = useImages();
+  const { albums, isLoadingAlbums, isCreatingAlbum, error, paginationMeta } =
+    useImages();
   const [uploadOpen, setUploadOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  const [filters, setFilters] = useState<AlbumQueryParams>({
+    page: 1,
+    limit: 16,
+    sortBy: "order",
+    sortOrder: "asc",
+    visibility: "all",
+  });
+
   useEffect(() => {
-    void dispatch(fetchAlbumsThunk());
-  }, [dispatch]);
+    void dispatch(fetchAlbumsThunk(filters));
+  }, [dispatch, filters]);
 
   useEffect(() => {
     return () => {
@@ -29,16 +43,27 @@ export function ImagesPage(): JSX.Element {
     };
   }, [dispatch]);
 
+  const handleFilterChange = useCallback(
+    (updatedFilters: Partial<AlbumQueryParams>) => {
+      setFilters((prev) => ({
+        ...prev,
+        ...updatedFilters,
+      }));
+    },
+    [],
+  );
+
   const handleCreateAlbum = useCallback(
     async (data: CreateAlbumInput): Promise<void> => {
       const result = await dispatch(createAlbumThunk(data));
       if (createAlbumThunk.fulfilled.match(result)) {
         setUploadOpen(false);
         setSuccessMessage("Album created successfully.");
+        void dispatch(fetchAlbumsThunk(filters));
         window.setTimeout(() => setSuccessMessage(null), 3000);
       }
     },
-    [dispatch],
+    [dispatch, filters],
   );
 
   return (
@@ -60,6 +85,8 @@ export function ImagesPage(): JSX.Element {
         </Button>
       </header>
 
+      <AlbumFilters filters={filters} onChange={handleFilterChange} />
+
       {successMessage ? (
         <div className="mb-4 rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-sm text-foreground">
           {successMessage}
@@ -80,7 +107,15 @@ export function ImagesPage(): JSX.Element {
           <Spinner size="lg" />
         </div>
       ) : (
-        <AlbumGrid albums={albums} />
+        <>
+          <AlbumGrid albums={albums} />
+
+          <Pagination
+            currentPage={filters.page ?? 1}
+            totalPages={paginationMeta?.totalPages ?? 1}
+            onPageChange={(newPage) => handleFilterChange({ page: newPage })}
+          />
+        </>
       )}
 
       <UploadAlbumModal

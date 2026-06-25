@@ -1,15 +1,24 @@
 import { ImageBatch } from "../../domain/entities/Image";
 import { CreateImageBatchDto } from "../../modules/image/dto/CreateImageBatchDto";
+import { GetBatchesQueryDto, PaginationMeta } from "../../modules/image/dto/GetBatchesQueryDto";
 import {
   RearrangeBatchesDto,
   RearrangeImagesDto,
 } from "../../modules/image/dto/RearrangeImagesDto";
 import { UpdateImageBatchDto } from "../../modules/image/dto/UpdateImageBatchDto";
 import { UpdateImageItemDto } from "../../modules/image/dto/UpdateImageItemDto";
+
+export interface FindAllByUserResult {
+  batches: ImageBatch[];
+  meta: PaginationMeta;
+}
 export interface IImageRepository {
   create(data: CreateImageBatchDto): Promise<ImageBatch>;
 
-  findAllByUser(userId: string): Promise<ImageBatch[]>;
+  findAllByUser(
+    userId: string,
+    query: GetBatchesQueryDto,
+  ): Promise<FindAllByUserResult>;
 
   findById(batchId: string): Promise<ImageBatch | null>;
 

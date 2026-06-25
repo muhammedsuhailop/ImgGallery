@@ -4,9 +4,11 @@ import type {
   AddImagesToAlbumInput,
   Album,
   AlbumPayload,
+  AlbumQueryParams,
   AlbumsPayload,
   CreateAlbumInput,
   DeleteImageInput,
+  PaginationMetadata,
   RearrangeImagesInput,
   UpdateAlbumTitleInput,
   UpdateImageInput,
@@ -14,9 +16,12 @@ import type {
 import { ApiEndpoints } from "@/shared/constants/apiEndpoints";
 
 class ImageService {
-  async getAlbums(): Promise<ApiResponse<AlbumsPayload | Album[]>> {
+  async getAlbums(
+    params?: AlbumQueryParams,
+  ): Promise<ApiResponse<AlbumsPayload | Album[]>> {
     const response = await api.get<ApiResponse<AlbumsPayload | Album[]>>(
       ApiEndpoints.IMAGES,
+      { params },
     );
     return response.data;
   }
@@ -183,6 +188,29 @@ export function extractAlbum(
     if ("album" in payload && payload.album) return payload.album;
     if ("batch" in payload && payload.batch) return payload.batch;
     if ("batchId" in payload) return payload as Album;
+  }
+
+  return null;
+}
+
+export function extractPaginationMeta(
+  payload:
+    | ApiResponse<AlbumsPayload | Album[]>
+    | AlbumsPayload
+    | Album[]
+    | undefined,
+): PaginationMetadata | null {
+  if (!payload) return null;
+
+  if (Array.isArray(payload)) return null;
+
+  if ("data" in payload && payload.data) {
+    if (Array.isArray(payload.data)) return null;
+    return payload.data.meta ?? null;
+  }
+
+  if ("meta" in payload && payload.meta) {
+    return payload.meta;
   }
 
   return null;

@@ -1,6 +1,11 @@
+import { QueryFilter } from "mongoose";
+import { SortOrder as MongooseSortOrder } from "mongoose";
 import { ImageBatch } from "../../domain/entities/Image";
-import { ImageBatchModel } from "../models/ImageModel";
-import { IImageRepository } from "../interfaces/IImageRepository";
+import { ImageBatchModel, ImageBatchPersistence } from "../models/ImageModel";
+import {
+  FindAllByUserResult,
+  IImageRepository,
+} from "../interfaces/IImageRepository";
 import { CreateImageBatchDto } from "../../modules/image/dto/CreateImageBatchDto";
 import { UpdateImageItemDto } from "../../modules/image/dto/UpdateImageItemDto";
 import {
@@ -9,6 +14,7 @@ import {
 } from "../../modules/image/dto/RearrangeImagesDto";
 import { toImageBatchEntity } from "./mappers/imageBatch.mapper";
 import { UpdateImageBatchDto } from "../../modules/image/dto/UpdateImageBatchDto";
+import { GetBatchesQueryDto } from "../../modules/image/dto/GetBatchesQueryDto";
 
 export class ImageRepository implements IImageRepository {
   async create(data: CreateImageBatchDto): Promise<ImageBatch> {
@@ -34,10 +40,41 @@ export class ImageRepository implements IImageRepository {
     return toImageBatchEntity(batch);
   }
 
-  async findAllByUser(userId: string): Promise<ImageBatch[]> {
-    const batches = await ImageBatchModel.find({ userId }).sort({ order: 1 });
+  async findAllByUser(
+    userId: string,
+    query: GetBatchesQueryDto,
+  ): Promise<FindAllByUserResult> {
+    const { page, limit, sortBy, sortOrder, visibility } = query;
 
-    return batches.map(toImageBatchEntity);
+    const filter: QueryFilter<ImageBatchPersistence> = { userId };
+
+    if (visibility !== "all") {
+      filter.visibility = visibility;
+    }
+
+    const sortDirection: MongooseSortOrder = sortOrder === "asc" ? 1 : -1;
+    const sort: Record<string, MongooseSortOrder> = { [sortBy]: sortDirection };
+
+    const skip = (page - 1) * limit;
+
+    const [batches, total] = await Promise.all([
+      ImageBatchModel.find(filter).sort(sort).skip(skip).limit(limit),
+      ImageBatchModel.countDocuments(filter),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      batches: batches.map(toImageBatchEntity),
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      },
+    };
   }
 
   async findById(batchId: string): Promise<ImageBatch | null> {

@@ -3,6 +3,7 @@ import { ImageBatchListResponse, RearrangeBatchesResponse } from "../responses/I
 import { UpdateImageItemDto } from "../dto/UpdateImageItemDto";
 import { RearrangeBatchesDto, RearrangeImagesDto } from "../dto/RearrangeImagesDto";
 import { UpdateImageBatchDto } from "../dto/UpdateImageBatchDto";
+import { GetBatchesQueryDto } from "../dto/GetBatchesQueryDto";
 
 export interface IImageService {
   uploadBatch(
@@ -12,14 +13,17 @@ export interface IImageService {
     batchTitle: string,
     visibility: "public" | "private",
   ): Promise<ImageBatchResponse>;
-  getMyBatches(userId: string): Promise<ImageBatchListResponse>;
+  getMyBatches(
+    userId: string,
+    query: GetBatchesQueryDto,
+  ): Promise<ImageBatchListResponse>;
 
   getBatch(
     batchId: string,
     requestingUserId: string,
   ): Promise<ImageBatchResponse>;
 
-  updateBatch( 
+  updateBatch(
     batchId: string,
     userId: string,
     data: UpdateImageBatchDto,

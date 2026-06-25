@@ -1,4 +1,23 @@
 export type Visibility = "public" | "private";
+export type SortByField = "createdAt" | "updatedAt" | "title" | "order";
+export type SortOrder = "asc" | "desc";
+export type VisibilityFilter = "public" | "private" | "all";
+
+export interface AlbumQueryParams {
+  page?: number;
+  limit?: number;
+  sortBy?: SortByField;
+  sortOrder?: SortOrder;
+  visibility?: VisibilityFilter;
+}
+
+export interface PaginationMetadata {
+  totalItems: number;
+  itemCount: number;
+  itemsPerPage: number;
+  totalPages: number;
+  currentPage: number;
+}
 
 export interface Image {
   imageId: string;
@@ -20,6 +39,7 @@ export interface Album {
 export interface AlbumsPayload {
   albums?: Album[];
   batches?: Album[];
+  meta?: PaginationMetadata;
 }
 
 export interface AlbumPayload {
@@ -60,6 +80,7 @@ export interface AddImagesToAlbumInput {
 export interface ImageState {
   albums: Album[];
   currentAlbum: Album | null;
+  paginationMeta: PaginationMetadata | null;
 
   isLoadingAlbums: boolean;
   isLoadingAlbum: boolean;

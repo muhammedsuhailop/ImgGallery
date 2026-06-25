@@ -8,6 +8,8 @@ import {
 } from "../dto/RearrangeImagesDto";
 import { HttpStatus } from "../../../constants/httpStatus.constants";
 import { ImageMessages } from "../../../constants/imageMessages.constants";
+import { getBatchesQuerySchema } from "../validations/image.validation";
+import { GetBatchesQueryDto } from "../dto/GetBatchesQueryDto";
 
 export class ImageController {
   constructor(private readonly imageService: IImageService) {}
@@ -43,7 +45,18 @@ export class ImageController {
   getMyBatches = async (req: Request, res: Response): Promise<void> => {
     const authReq = req as AuthRequest;
 
-    const result = await this.imageService.getMyBatches(authReq.userId);
+    const parsed = getBatchesQuerySchema.safeParse(req.query);
+
+    if (!parsed.success) {
+      res
+        .status(HttpStatus.BAD_REQUEST)
+        .json(new ApiResponse(false, parsed.error.message));
+      return;
+    }
+
+    const query: GetBatchesQueryDto = parsed.data;
+
+    const result = await this.imageService.getMyBatches(authReq.userId, query);
 
     res
       .status(HttpStatus.OK)
