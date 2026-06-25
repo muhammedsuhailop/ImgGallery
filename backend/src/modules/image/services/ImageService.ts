@@ -19,6 +19,7 @@ import {
 import { UpdateImageBatchDto } from "../dto/UpdateImageBatchDto";
 import { HttpStatus } from "../../../constants/httpStatus.constants";
 import { ImageErrors } from "../../../constants/imageMessages.constants";
+import { GetBatchesQueryDto } from "../dto/GetBatchesQueryDto";
 
 export class ImageService implements IImageService {
   constructor(
@@ -80,10 +81,19 @@ export class ImageService implements IImageService {
     return this.toResponse(batch);
   }
 
-  async getMyBatches(userId: string): Promise<ImageBatchListResponse> {
-    const batches = await this.imageRepository.findAllByUser(userId);
+  async getMyBatches(
+    userId: string,
+    query: GetBatchesQueryDto,
+  ): Promise<ImageBatchListResponse> {
+    const { batches, meta } = await this.imageRepository.findAllByUser(
+      userId,
+      query,
+    );
 
-    return { batches: batches.map((batch) => this.toResponse(batch)) };
+    return {
+      batches: batches.map((batch) => this.toResponse(batch)),
+      meta,
+    };
   }
 
   async getBatch(

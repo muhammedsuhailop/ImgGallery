@@ -41,3 +41,23 @@ export const rearrangeBatchesSchema = z.object({
     )
     .min(1, "orderedBatches must have at least one entry"),
 });
+
+export const getBatchesQuerySchema = z.object({
+  page: z
+    .string()
+    .optional()
+    .transform((val) => (val !== undefined ? parseInt(val, 10) : 1))
+    .pipe(z.number().int().min(1, "page must be at least 1")),
+
+  limit: z
+    .string()
+    .optional()
+    .transform((val) => (val !== undefined ? parseInt(val, 10) : 10))
+    .pipe(z.number().int().min(1).max(100, "limit must be at most 100")),
+
+  sortBy: z.enum(["createdAt", "updatedAt", "title", "order"]).default("order"),
+
+  sortOrder: z.enum(["asc", "desc"]).default("asc"),
+
+  visibility: z.enum(["public", "private", "all"]).default("all"),
+});

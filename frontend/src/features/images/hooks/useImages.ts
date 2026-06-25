@@ -12,11 +12,20 @@ import {
   selectIsUpdatingAlbumTitle,
   selectIsUpdatingImage,
 } from "@/features/images/store/imageSelectors";
-import type { Album } from "@/features/images/types/image.types";
+import type {
+  Album,
+  ImageState,
+  PaginationMetadata,
+} from "@/features/images/types/image.types";
+
+export interface RootStateWithImages {
+  images: ImageState;
+}
 
 export interface UseImagesResult {
   albums: Album[];
   currentAlbum: Album | null;
+  paginationMeta?: PaginationMetadata | null; 
   isLoadingAlbums: boolean;
   isLoadingAlbum: boolean;
   isCreatingAlbum: boolean;
@@ -32,6 +41,9 @@ export function useImages(): UseImagesResult {
   return {
     albums: useAppSelector(selectAlbums),
     currentAlbum: useAppSelector(selectCurrentAlbum),
+    paginationMeta: useAppSelector(
+      (state: RootStateWithImages) => state.images.paginationMeta,
+    ),
     isLoadingAlbums: useAppSelector(selectIsLoadingAlbums),
     isLoadingAlbum: useAppSelector(selectIsLoadingAlbum),
     isCreatingAlbum: useAppSelector(selectIsCreatingAlbum),

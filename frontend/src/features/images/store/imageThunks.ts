@@ -1,12 +1,13 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import {
   extractAlbum,
-  extractAlbums,
   imageService,
 } from "@/features/images/services/ImageService";
 import type {
   AddImagesToAlbumInput,
   Album,
+  AlbumQueryParams,
+  AlbumsPayload,
   CreateAlbumInput,
   DeleteImageInput,
   RearrangeImagesInput,
@@ -21,13 +22,13 @@ export interface ImageThunkApiConfig {
 }
 
 export const fetchAlbumsThunk = createAsyncThunk<
-  Album[],
-  void,
+  AlbumsPayload | Album[],
+  AlbumQueryParams | undefined,
   ImageThunkApiConfig
->(`${ApiEndpoints.IMAGES}/fetchAlbums`, async (_, { rejectWithValue }) => {
+>(`${ApiEndpoints.IMAGES}/fetchAlbums`, async (params, { rejectWithValue }) => {
   try {
-    const response = await imageService.getAlbums();
-    return extractAlbums(response.data);
+    const response = await imageService.getAlbums(params);
+    return response.data ?? [];
   } catch (error) {
     return rejectWithValue(getErrorMessage(error));
   }
